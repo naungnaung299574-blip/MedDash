@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedDash Cloud Pro Edition</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0f2b46">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Pie Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
+        @import url('https://mmwebfonts.comquas.com/fonts/?font=pyidaungsu');
+        
+        body { font-family: 'Pyidaungsu', sans-serif; margin: 0; padding: 0; overflow-x: hidden; background-color: #f8fafc;}
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        .animate-up { animation: slideUp 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .custom-scrollbar-hide-mobile::-webkit-scrollbar { height: 4px; }
+        @media (max-width: 768px) { .custom-scrollbar-hide-mobile::-webkit-scrollbar { display: none; } }
+        
+        details > summary { list-style: none; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        /* Loading Screen Styles */
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #f9f9f9; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease-in-out; }
+        .logo-container { display: flex; align-items: center; gap: 20px; }
+        .icon-box { width: 60px; height: 60px; position: relative; animation: float 3s ease-in-out infinite; }
+        @media (min-width: 768px) { .icon-box { width: 80px; height: 80px; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .box-bottom { width: 45px; height: 45px; background-color: #0f2b46; border-radius: 12px; position: absolute; bottom: 0; right: 0; }
+        .box-top { width: 45px; height: 45px; background: linear-gradient(135deg, #7ad3d3, #4ea8a8); border-radius: 12px; position: absolute; top: 0; left: 0; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(78, 168, 168, 0.4); }
+        @media (min-width: 768px) { .box-bottom, .box-top { width: 60px; height: 60px; } }
+        .plus-content { color: #0f2b46; font-size: 30px; font-weight: bold; line-height: 1; text-align: center; animation: heartbeat 1.5s ease-in-out infinite; }
+        @media (min-width: 768px) { .plus-content { font-size: 40px; } }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.2); } 30% { transform: scale(1); } 45% { transform: scale(1.2); } 60% { transform: scale(1); } }
+        .text-content { display: flex; flex-direction: column; }
+        .loading-title { color: #1a2a46; font-size: 36px; margin: 0; font-weight: 700; letter-spacing: -1px; font-family: 'Poppins', sans-serif;}
+        @media (min-width: 768px) { .loading-title { font-size: 48px; } }
+        .loading-subtitle { color: #4ea8a8; font-size: 14px; margin: 0; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-family: 'Poppins', sans-serif;}
+        .progress-container { width: 80%; max-width: 250px; margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .loading-text { color: #1a2a46; font-size: 12px; font-weight: 600; letter-spacing: 2px; font-family: 'Poppins', sans-serif;}
+        .dots::after { content: ''; animation: loadingDots 1.5s steps(4, end) infinite; }
+        @keyframes loadingDots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
+        .progress-bar-bg { width: 100%; height: 6px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #7ad3d3, #0f2b46); width: 0%; border-radius: 10px; animation: fillProgress 3s ease-in-out forwards; }
+        @keyframes fillProgress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+
+    <div id="view-splash" class="loading-screen">
+        <div class="logo-container">
+            <div class="icon-box"><div class="box-bottom"></div><div class="box-top"><div class="plus-content">+</div></div></div>
+            <div class="text-content"><h1 class="loading-title">MedDash</h1><p class="loading-subtitle">System Initializing</p></div>
+        </div>
+        <div class="progress-container">
+            <div class="loading-text">LOADING<span class="dots"></span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="main-app-container" class="hidden min-h-screen w-full flex flex-col lg:flex-row">
+        
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex flex-col w-20 hover:w-72 transition-all duration-300 ease-in-out bg-slate-900 h-screen sticky top-0 text-white py-6 px-4 hover:px-6 shadow-xl z-50 group overflow-hidden whitespace-nowrap shrink-0">
+            <div class="flex items-center gap-4 mb-10 cursor-default border-b border-slate-800 pb-6">
+                <div class="bg-white p-0.5 rounded-xl shadow-lg shadow-blue-500/10 shrink-0 mx-auto group-hover:mx-0 w-[42px] h-[42px] flex items-center justify-center overflow-hidden"><i class="fa-solid fa-cloud text-blue-600 text-xl"></i></div>
+                <h1 class="font-black text-2xl tracking-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200" style="font-family: 'Poppins', sans-serif;" data-i18n="title">MedDash</h1>
+            </div>
+            
+            <nav class="space-y-3 flex-1 w-full">
+                <button onclick="appState.setView('home')" id="nav-home" title="Home" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left bg-blue-600 text-white shadow-lg shadow-blue-600/30"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-house"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="home">Home</span></button>
+                <button onclick="appState.setView('orgchart')" id="nav-orgchart" title="ဖွဲ့စည်းပုံ" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-sitemap"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="orgChartTitle">ဖွဲ့စည်းပုံ</span></button>
+                <button onclick="appState.setView('hospitals')" id="nav-hospitals" title="ဆေးရုံများ" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-hospital"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="hospitalList">ဆေးရုံများ</span></button>
+                
+                <!-- Admin Only Menus -->
+                <button onclick="appState.setView('tmo')" id="nav-tmo" title="TMO Contacts" class="admin-only hidden flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-address-book"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="tmoTitle">TMO Contacts</span></button>
+                <button onclick="appState.setView('dashboard')" id="nav-dashboard" title="ဝန်ထမ်းအင်အားစာရင်း" class="admin-only hidden flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-users"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="employeeList">ဝန်ထမ်းအင်အားစာရင်း</span></button>
+            </nav>
+
+            <div class="mt-auto overflow-hidden flex flex-col gap-2">
+                <button onclick="appState.openLoginModal()" id="nav-login" title="Admin Login" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-emerald-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-lock"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Admin Login</span></button>
+                <button onclick="appState.logoutAdmin()" id="nav-logout" title="Logout" class="hidden flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-red-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-right-from-bracket"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Logout</span></button>
+                <div class="h-px bg-slate-800 my-1 mx-2"></div>
+                <button onclick="appState.setView('settings')" id="nav-settings" title="Settings" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-gear"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="settings">ဆက်တင်များ</span></button>
+                <div class="flex items-center gap-4 p-2 group-hover:p-4 bg-transparent group-hover:bg-slate-800/50 rounded-2xl transition-all mt-2 cursor-default"><div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 shadow-inner"><div id="status-bulb" class="w-3 h-3 rounded-full bg-red-500"></div></div><div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300"><p id="db-status-text" class="text-xs text-slate-400 font-bold mb-0.5">ချိတ်ဆက်နေပါသည်...</p><p class="text-sm font-bold text-blue-300">Cloud Sync</p></div></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col p-4 md:p-10 max-w-7xl mx-auto w-full relative z-10 min-h-screen">
+            <div class="flex justify-between items-start md:items-center mb-8 md:mb-10 w-full relative z-30 shrink-0 gap-4">
+                <div class="space-y-1"><h2 class="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 leading-tight" id="main-subtitle" data-i18n="subtitle">ရှမ်းပြည်နယ်(တောင်ပိုင်း)ပြည်နယ်ကုသရေးဦးစီးဌာန</h2></div>
+                <div class="lg:hidden relative shrink-0">
+                    <button onclick="appState.toggleMenu()" class="flex items-center justify-center bg-white border border-slate-200 w-12 h-12 rounded-xl hover:bg-slate-50 transition-all shadow-sm focus:ring-4 focus:ring-blue-500/10 outline-none z-50 relative"><i class="fa-solid fa-bars text-xl text-slate-700"></i></button>
+                    <div id="dropdown-menu" class="hidden fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40" onclick="appState.toggleMenu()">
+                        <div class="absolute top-20 right-4 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50 animate-in overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                            <button onclick="appState.setView('home'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-house w-6 text-center text-slate-400"></i> <span data-i18n="home">Home</span></button>
+                            <button onclick="appState.setView('orgchart'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-sitemap w-6 text-center text-slate-400"></i> <span data-i18n="orgChartTitle">ဖွဲ့စည်းပုံ</span></button>
+                            <button onclick="appState.setView('hospitals'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-hospital w-6 text-center text-slate-400"></i> <span data-i18n="hospitalList">ဆေးရုံများ</span></button>
+                            <button onclick="appState.setView('tmo'); appState.toggleMenu()" class="admin-only hidden flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-address-book w-6 text-center text-slate-400"></i> <span data-i18n="tmoTitle">TMO Contacts</span></button>
+                            <button onclick="appState.setView('dashboard'); appState.toggleMenu()" class="admin-only hidden flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-users w-6 text-center text-slate-400"></i> <span data-i18n="employeeList">ဝန်ထမ်းအင်အားစာရင်း</span></button>
+                            <div class="h-px bg-slate-100 my-2 mx-4"></div>
+                            <button onclick="appState.openLoginModal(); appState.toggleMenu()" id="nav-login-mobile" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-emerald-50 transition-colors font-bold text-[15px] text-emerald-600"><i class="fa-solid fa-lock w-6 text-center"></i> Admin Login</button>
+                            <button onclick="appState.logoutAdmin(); appState.toggleMenu()" id="nav-logout-mobile" class="hidden flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-red-50 transition-colors font-bold text-[15px] text-red-600"><i class="fa-solid fa-right-from-bracket w-6 text-center"></i> Logout</button>
+                            <button onclick="appState.setView('settings'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-slate-50 transition-colors font-bold text-[15px] text-slate-600"><i class="fa-solid fa-gear w-6 text-center text-slate-400"></i> <span data-i18n="settings">ဆက်တင်များ</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Views Container -->
+            <div class="flex-1 w-full">
+                
+                <!-- Home View -->
+                <div id="view-home" class="animate-in pb-10">
+                    <div class="bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3">
+                                <span class="bg-blue-100 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-map-location-dot"></i></span>
+                                <span data-i18n="mapTitle">ဆေးရုံများတည်နေရာပြမြေပုံ</span>
+                            </h3>
+                            <div class="flex gap-2 sm:hidden admin-only hidden">
+                                <button onclick="document.getElementById('map-upload-input').click()" class="flex-1 bg-slate-50 border border-slate-200 text-blue-600 p-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2"><i class="fa-solid fa-upload"></i> ပြောင်းမည်</button>
+                                <button onclick="appState.removeMapImage()" class="flex-1 bg-red-50 border border-red-100 text-red-600 p-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2"><i class="fa-solid fa-trash"></i> ဖျက်မည်</button>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full aspect-[4/3] sm:aspect-video md:aspect-[21/9] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 flex items-center justify-center relative group p-1.5 md:p-2 shadow-inner">
+                            <img id="home-map-img" src="https://placehold.co/1200x600/e2e8f0/475569?text=Map" alt="Map" class="w-full h-full object-cover rounded-xl transition-transform duration-700 cursor-pointer" onclick="appState.openMapModal()" />
+                            <div class="hidden sm:flex absolute top-4 right-4 gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 admin-only hidden">
+                                <button onclick="document.getElementById('map-upload-input').click()" class="bg-white hover:bg-slate-100 text-blue-600 px-4 py-2.5 rounded-xl shadow-lg font-bold text-sm flex items-center gap-2 border border-slate-200"><i class="fa-solid fa-upload"></i> ပုံပြောင်းမည်</button>
+                                <button onclick="appState.removeMapImage()" class="bg-white hover:bg-red-50 text-red-600 p-2.5 rounded-xl shadow-lg font-bold text-sm flex items-center gap-2 border border-slate-200"><i class="fa-solid fa-trash"></i></button>
+                                <input type="file" id="map-upload-input" accept="image/*" class="hidden" onchange="appState.uploadMapImage(event)">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
+                            <div class="bg-blue-50 p-4 md:p-6 rounded-2xl border border-blue-100 flex flex-col justify-center"><p class="text-blue-600 font-bold text-xs md:text-sm mb-1" data-i18n="totalDistricts">စုစုပေါင်း ခရိုင်</p><p id="stat-districts" class="text-3xl md:text-4xl font-black text-slate-800">0</p></div>
+                            <div class="bg-indigo-50 p-4 md:p-6 rounded-2xl border border-indigo-100 flex flex-col justify-center"><p class="text-indigo-600 font-bold text-xs md:text-sm mb-1" data-i18n="totalTownships">စုစုပေါင်း မြို့နယ်</p><p id="stat-townships" class="text-3xl md:text-4xl font-black text-slate-800">0</p></div>
+                        </div>
+
+                        <input type="file" id="importHomeFile" accept=".csv" class="hidden" onchange="appState.importHomeCSV(event)" />
+                        <div id="dynamic-home-tables"></div>
+                    </div>
+                </div>
+
+                <!-- Organization Chart View -->
+                <div id="view-orgchart" class="hidden animate-in pb-10">
+                    <div class="bg-blue-900 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200 min-h-[80vh] p-4 md:p-8 text-white overflow-hidden relative">
+                        <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-500 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+                        <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-indigo-500 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+                        
+                        <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-center text-yellow-400 mb-8 md:mb-10 shadow-black drop-shadow-md relative z-10" data-i18n="orgChartTitle">ပြည်နယ်ကုသရေးဦးစီးဌာန ဖွဲ့စည်းပုံ</h1>
+
+                        <div class="w-full overflow-x-auto relative z-10 pb-6 custom-scrollbar-hide-mobile">
+                            <div class="min-w-[1000px] p-2 md:p-4">
+                                <div class="flex justify-center mb-12"><div class="bg-gradient-to-b from-orange-400 to-orange-600 text-white px-8 py-4 rounded shadow-lg border-2 border-yellow-300 font-bold text-xl drop-shadow-xl">ပြည်နယ်ကုသရေးဦးစီးဌာနမှူး</div></div>
+                                <div class="flex flex-col xl:flex-row justify-center gap-10 xl:gap-6">
+                                    <div class="flex-1 flex flex-col items-center">
+                                        <div class="bg-green-700 w-full xl:w-[90%] text-center py-3 rounded shadow-lg mb-4 font-bold text-lg border border-green-500">ဒုတိယပြည်နယ်ကုသရေးဦးစီးဌာနမှူး(ကုသရေး)</div>
+                                        <div class="bg-blue-950 w-3/4 xl:w-[80%] text-center py-2 border border-blue-400 rounded shadow-md mb-8">ဒုတိယညွှန်ကြားရေးမှူး<br>ကုသရေးဦးစီးဌာနမှူး(ကုသရေး)</div>
+                                        <div class="flex flex-wrap justify-center gap-4 mb-8">
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(ဝယ်ယူ/ဖြန့်ဖြူး)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">လ/ထ ဆရာဝန်<br>(ဝယ်ယူ/ဖြန့်ဖြူး)</div></div>
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(ကုသရေး)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">လ/ထ ဆရာဝန်<br>(ကုသရေး)</div></div>
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(သူနာပြု)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">ဦးစီးအရာရှိ<br>(သူနာပြု)</div></div>
+                                        </div>
+                                        <div class="bg-blue-800/80 border border-blue-400 p-4 rounded-lg text-sm w-full xl:w-[90%] text-center leading-relaxed shadow-inner">ဌာနခွဲစာရေးကြီး(၁)ဦး ၊ အကြီးတန်းစာရေး(၂)ဦး ၊ အငယ်တန်းစာရေး(၃)ဦး ၊ ရုံးအကူ(၃)ဦး</div>
+                                    </div>
+                                    <div class="flex-1 flex flex-col items-center mt-10 xl:mt-0">
+                                        <div class="bg-green-700 w-full xl:w-[90%] text-center py-3 rounded shadow-lg mb-4 font-bold text-lg border border-green-500">ဒုတိယပြည်နယ်ကုသရေးဦးစီးဌာနမှူး(စီမံ/ဘဏ္ဍာ)</div>
+                                        <div class="bg-blue-950 w-3/4 xl:w-[80%] text-center py-2 border border-blue-400 rounded shadow-md mb-8">ဒုတိယညွှန်ကြားရေးမှူး<br>ကုသရေးဦးစီးဌာနမှူး(စီမံ/ဘဏ္ဍာ)</div>
+                                        <div class="flex flex-wrap justify-center gap-4 mb-8">
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(အုပ်ချုပ်/စီမံ)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">ဦးစီးအရာရှိ<br>(အုပ်ချုပ်/စီမံ)</div></div>
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(ဘဏ္ဍာရေး)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">ဦးစီးအရာရှိ<br>(ဘဏ္ဍာရေး)</div></div>
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(မှတ်တမ်း/လုပ်ငန်းစစ်)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">ဦးစီးအရာရှိ<br>(မှတ်တမ်း/လုပ်ငန်းစစ်)</div></div>
+                                            <div class="flex flex-col items-center gap-2"><div class="bg-gradient-to-b from-blue-400 to-blue-600 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-300">လ/ထ ညွှန်မှူး<br>(အင်ဂျင်နီယာ)</div><div class="bg-gradient-to-b from-blue-500 to-blue-700 text-sm px-2 py-2 rounded shadow-md text-center w-36 h-16 flex items-center justify-center border border-blue-400">လ/ထ အင်ဂျင်နီယာ<br>(အင်ဂျင်နီယာ)</div></div>
+                                        </div>
+                                        <div class="bg-blue-800/80 border border-blue-400 p-4 rounded-lg text-sm w-full xl:w-[90%] text-center leading-relaxed shadow-inner">အငယ်တန်းအင်ဂျင်နီယာ(၃)ဦး ၊ ဌာနခွဲစာရေးကြီး(၁)ဦး ၊ စာရင်းကိုင်-၂(၁)ဦး ၊ အကြီးတန်းစာရေး(၂)ဦး ၊ စာရင်းကိုင်-၃(၁)ဦး ၊ အငယ်တန်းစာရေး(၃)ဦး ၊ စာရင်းကိုင်-၄(၁)ဦး ၊ ရုံးအကူ(၃)ဦး ၊ ယာဉ်မောင်း(၆)ဦး</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hospitals List View -->
+                <div id="view-hospitals" class="hidden animate-in pb-10">
+                    <div class="bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200">
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-100 pb-4"><span class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-hospital"></i></span><span data-i18n="hospitalList">ဆေးရုံများ</span></h3>
+                        <div id="hospitals-list-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"></div>
+                    </div>
+                </div>
+
+                <!-- TMO View (Admin Only) -->
+                <div id="view-tmo" class="hidden animate-in pb-10">
+                    <div class="bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200">
+                        <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-6">
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-address-book"></i></span><span data-i18n="tmoTitle">TMO Contacts</span></h3>
+                            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto ml-0 lg:ml-auto">
+                                <button onclick="appState.toggleEditTMO()" id="btn-edit-tmo" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm admin-only hidden"><i class="fa-solid fa-pen"></i> <span class="inline">Edit Table</span></button>
+                                <button onclick="document.getElementById('importTMOFile').click()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm admin-only hidden"><i class="fa-solid fa-upload"></i> <span class="inline">Import</span></button>
+                                <input type="file" id="importTMOFile" accept=".csv" class="hidden" onchange="appState.importTMOCSV(event)" />
+                                <button onclick="appState.exportTMOCSV()" class="flex-1 sm:flex-none justify-center w-full sm:w-auto flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm mt-2 sm:mt-0"><i class="fa-solid fa-download"></i> <span class="inline">Export</span></button>
+                            </div>
+                        </header>
+                        <div class="mb-6 relative w-full md:w-[400px]">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="tmoSearchInput" placeholder="မြို့နယ်၊ အမည်ဖြင့် ရှာဖွေပါ..." class="w-full pl-12 pr-6 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-sm md:text-base font-bold placeholder:text-slate-400" oninput="appState.updateTMOFilters()" />
+                        </div>
+                        <div class="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto custom-scrollbar-hide-mobile">
+                                <table class="w-full text-left text-sm whitespace-nowrap min-w-[800px]"><thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold"><tr><th class="py-4 px-4 text-center w-16 border-r border-slate-100">စဉ်</th><th class="py-4 px-4 border-r border-slate-100">မြို့နယ်</th><th class="py-4 px-4 border-r border-slate-100">မြို့နယ် Email လိပ်စာ</th><th class="py-4 px-4 border-r border-slate-100">TMO အမည်</th><th class="py-4 px-4 border-r border-slate-100">TMO Email လိပ်စာ</th><th class="py-4 px-4">ဖုန်းနံပါတ်</th></tr></thead><tbody id="tmo-table-body" class="divide-y divide-slate-100 font-medium text-slate-700 bg-white"></tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Dashboard View (Admin Only) -->
+                <div id="view-dashboard" class="hidden animate-in pb-10">
+                    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-users"></i></span><span data-i18n="employeeList">ဝန်ထမ်းအင်အားစာရင်း</span></h3>
+                        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto ml-0 lg:ml-auto">
+                            <button onclick="document.getElementById('importFile').click()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-all shadow-sm text-sm admin-only hidden"><i class="fa-solid fa-upload"></i> <span class="inline">Import</span></button>
+                            <input type="file" id="importFile" accept=".csv" class="hidden" onchange="appState.importCSV(event)" />
+                            <button onclick="appState.exportCSV()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl font-bold hover:bg-green-100 transition-all shadow-sm text-sm"><i class="fa-solid fa-download"></i> <span class="inline">Export</span></button>
+                            <button onclick="appState.openModal()" class="w-full sm:w-auto justify-center flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-sm mt-2 sm:mt-0 admin-only hidden"><i class="fa-solid fa-user-plus"></i> <span data-i18n="addBtn">ဝန်ထမ်းသစ်ထည့်ရန်</span></button>
+                        </div>
+                    </header>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-3">
+                        <div class="relative flex-1"><i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="အမည်၊ ဌာန သို့မဟုတ် ID..." class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-sm font-bold placeholder:text-slate-400" oninput="appState.updateFilters()" /></div>
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
+                            <select id="filterDist" onchange="appState.updateFilters()" class="w-full sm:w-36 px-3 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none bg-slate-50 font-bold text-slate-700 text-sm appearance-none"><option value="" data-i18n="filterAllDistricts">ခရိုင်အားလုံး</option></select>
+                            <select id="filterTown" onchange="appState.updateFilters()" disabled class="w-full sm:w-36 px-3 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none bg-slate-50 font-bold text-slate-700 disabled:opacity-50 text-sm appearance-none"><option value="" data-i18n="filterAllTownships">မြို့နယ်အားလုံး</option></select>
+                            <select id="filterHosp" onchange="appState.updateFilters()" disabled class="w-full sm:w-36 px-3 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none bg-slate-50 font-bold text-slate-700 disabled:opacity-50 text-sm appearance-none"><option value="" data-i18n="filterAllHospitals">ဆေးရုံအားလုံး</option></select>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto custom-scrollbar-hide-mobile">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr><th class="px-4 py-4 text-sm font-bold text-slate-600" data-i18n="tableId">အမှတ်စဉ်</th><th class="px-4 py-4 text-sm font-bold text-slate-600" data-i18n="tableName">အမည်</th><th class="px-4 py-4 text-sm font-bold text-slate-600" data-i18n="tableLocation">ခရိုင် / မြို့နယ်</th><th class="px-4 py-4 text-sm font-bold text-slate-600" data-i18n="tableHospital">ဆေးရုံ / တိုက်နယ်</th><th class="px-4 py-4 text-sm font-bold text-slate-600" data-i18n="tableDept">ဌာန / ရာထူး</th><th class="px-4 py-4 text-sm font-bold text-slate-600 text-center" data-i18n="tableAction">အသေးစိတ်</th></tr>
+                                </thead>
+                                <tbody id="employee-table-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="view-settings" class="hidden animate-in pb-10 flex-1">
+                    <div class="bg-white p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200 max-w-3xl mx-auto mt-4">
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-8 flex items-center gap-3 border-b border-slate-100 pb-4"><span class="bg-slate-100 text-slate-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner"><i class="fa-solid fa-gear"></i></span><span data-i18n="settings">ဆက်တင်များ</span></h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div><h4 class="font-bold text-slate-800 text-base md:text-lg" data-i18n="languageSetting">ဘာသာစကားပြောင်းရန်</h4><p class="text-xs md:text-sm text-slate-500">မြန်မာ / English</p></div>
+                                <button onclick="appState.toggleLanguage()" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95"><i class="fa-solid fa-language text-xl"></i><span id="settings-lang-indicator" class="tracking-widest">MM</span></button>
+                            </div>
+                            <div class="flex items-center justify-between p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div><h4 class="font-bold text-slate-800 text-base md:text-lg" data-i18n="appVersion">App ဗားရှင်း</h4><p class="text-xs md:text-sm text-slate-500">လက်ရှိအသုံးပြုနေသော ဗားရှင်း</p></div>
+                                <span class="bg-indigo-100 text-indigo-700 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold tracking-wider border border-indigo-200">Version 2.5 Pro Secured</span>
+                            </div>
+                            
+                            <!-- Database Backup -->
+                            <div class="admin-only hidden flex flex-col sm:flex-row items-center justify-between p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-base md:text-lg">Database Backup</h4>
+                                    <p class="text-xs md:text-sm text-slate-500">Export all data as JSON</p>
+                                </div>
+                                <button onclick="appState.exportFullBackup()" class="mt-3 sm:mt-0 flex items-center justify-center w-full sm:w-auto gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
+                                    <i class="fa-solid fa-database"></i> Download JSON
+                                </button>
+                            </div>
+
+                            <!-- Activity Audit Trail -->
+                            <div class="admin-only hidden bg-slate-50 rounded-2xl border border-slate-100 p-4 md:p-5">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-slate-800 text-base md:text-lg"><i class="fa-solid fa-clipboard-list text-slate-400 mr-2"></i> Activity Audit Trail</h4>
+                                    <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-1 rounded font-bold">Admin Only</span>
+                                </div>
+                                <div class="max-h-48 overflow-y-auto custom-scrollbar-hide-mobile bg-white rounded-xl border border-slate-200 p-2 shadow-inner" id="audit-log-container">
+                                    <!-- Logs will be rendered here -->
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Footer -->
+            <footer class="mt-auto pt-6 pb-2 w-full text-center shrink-0"><p class="text-slate-400 font-medium text-xs md:text-sm flex items-center justify-center gap-2"><i class="fa-regular fa-copyright"></i> 2026 kyawkhaung <span class="text-slate-300">|</span> <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] md:text-xs font-bold">v2.5 Secured</span></p></footer>
+        </main>
+    </div>
+
+    <!-- Modals & Overlays -->
+    <div id="map-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-in fade-in">
+        <button onclick="appState.closeMapModal()" class="absolute top-6 right-6 p-3 bg-white/10 hover:bg-red-500 text-white rounded-full transition-colors z-[160] cursor-pointer"><i class="fa-solid fa-xmark text-xl md:text-2xl"></i></button>
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 md:gap-4 z-[160] bg-slate-800/80 p-2 md:p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl">
+            <button onclick="appState.zoomMap(-0.25)" class="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center justify-center text-lg md:text-xl transition-colors cursor-pointer"><i class="fa-solid fa-minus"></i></button>
+            <button onclick="appState.zoomMap(0)" class="px-4 md:px-6 h-10 md:h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center text-sm md:text-base transition-colors font-bold shadow-lg shadow-blue-500/30 cursor-pointer">မူလအရွယ်အစား</button>
+            <button onclick="appState.zoomMap(0.25)" class="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center justify-center text-lg md:text-xl transition-colors cursor-pointer"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div class="w-full h-full overflow-auto flex items-center justify-center p-2 md:p-4" id="map-scroll-container"><img id="map-zoom-img" src="" class="max-w-[100vw] max-h-[80vh] object-contain transition-transform duration-200 cursor-grab active:cursor-grabbing" style="transform: scale(1); transform-origin: center;" /></div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden">
+            <div class="p-6 md:p-8">
+                <div class="flex justify-between items-center mb-8"><h3 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-lock text-blue-600 mr-2"></i> Admin Login</h3><button onclick="appState.closeLoginModal()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+                <form onsubmit="appState.loginAdmin(event)" class="space-y-5">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5">Email / အီးမေးလ်</label><input type="email" id="login-email" required placeholder="admin@meddash.com" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-bold text-slate-800 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1.5">Password / စကားဝှက်</label><input type="password" id="login-pwd" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-bold text-slate-800 text-sm"></div>
+                    <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all mt-4">Login ဝင်မည်</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-backdrop" class="hidden fixed inset-0 bg-slate-900/100 backdrop-blur-sm z-[100] transition-opacity" onclick="appState.closeModal()"></div>
+
+    <!-- Employee Modals -->
+    <div id="employee-modal" class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-full max-w-2xl bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl z-[110] flex flex-col max-h-[90vh] overflow-hidden animate-in">
+        <div id="modal-header-view" class="hidden bg-slate-900 p-6 md:p-8 text-white relative shrink-0">
+            <div class="flex items-center gap-4 md:gap-6">
+                <div class="relative group shrink-0">
+                    <img id="detail-photo" src="" alt="Profile" class="hidden w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover shadow-xl rotate-3 border-2 border-white/20" />
+                    <div id="detail-photo-placeholder" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-blue-600 flex items-center justify-center text-2xl md:text-3xl font-bold shadow-xl shadow-blue-500/20 rotate-3 border-2 border-white/20">A</div>
+                    <button id="btn-edit-photo" onclick="document.getElementById('photo-upload').click()" class="hidden absolute -bottom-2 -right-2 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-400 transition-colors admin-only hidden"><i class="fa-solid fa-camera text-xs md:text-sm"></i></button>
+                </div>
+                <div><h3 id="detail-name" class="text-xl md:text-2xl font-bold leading-tight">Name</h3><p id="detail-id" class="text-blue-400 font-bold text-sm mt-1">EMP-0000</p></div>
+            </div>
+            <button onclick="appState.closeModal()" class="absolute top-4 right-4 md:top-6 md:right-6 p-2 md:p-2.5 hover:bg-white/10 rounded-full transition-colors"><i class="fa-solid fa-xmark text-lg md:text-xl"></i></button>
+        </div>
+        <div id="modal-header-add" class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0"><h3 class="text-lg md:text-xl font-bold text-slate-800" data-i18n="addBtn">ဝန်ထမ်းသစ်ထည့်ရန်</h3><button onclick="appState.closeModal()" class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400"><i class="fa-solid fa-xmark text-lg md:text-xl"></i></button></div>
+        <div class="p-4 md:p-6 overflow-y-auto custom-scrollbar-hide-mobile">
+            <form id="employee-form" onsubmit="appState.saveEmployee(event)" class="space-y-4 md:space-y-5">
+                <input type="hidden" id="emp-id">
+                <div id="photo-upload-section" class="flex flex-col items-center justify-center gap-3 pb-2 md:pb-4">
+                    <div onclick="document.getElementById('photo-upload').click()" class="w-20 h-20 md:w-24 md:h-24 rounded-3xl border-2 border-dashed border-blue-200 hover:border-blue-500 bg-blue-50/50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group relative">
+                        <img id="preview-img" src="" class="hidden w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
+                        <i id="preview-icon" class="fa-solid fa-image text-blue-300 group-hover:text-blue-500 text-2xl md:text-3xl"></i>
+                    </div>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-500" data-i18n="uploadPhoto">ဓာတ်ပုံတင်ရန်</p>
+                    <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="appState.handleImageUpload(event)" />
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                    <div class="col-span-1 sm:col-span-2"><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="tableName">အမည်</label><input required id="inp-name" type="text" class="w-full px-4 py-3 md:px-5 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-bold text-slate-800 text-sm md:text-base" /></div>
+                    <div><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="district">ခရိုင် / ဒေသ</label><select id="inp-district" onchange="appState.updateModalTownships()" class="w-full px-3 py-3 md:px-4 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none bg-slate-50 font-bold text-slate-800 text-sm md:text-base"></select></div>
+                    <div><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="township">မြို့နယ်</label><select id="inp-township" onchange="appState.updateModalHospitals()" class="w-full px-3 py-3 md:px-4 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none bg-slate-50 font-bold text-slate-800 text-sm md:text-base"></select></div>
+                    <div class="col-span-1 sm:col-span-2"><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="hospital">ဆေးရုံ / တိုက်နယ်</label><select id="inp-hospital" class="w-full px-3 py-3 md:px-4 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none bg-slate-50 font-bold text-slate-800 text-sm md:text-base"></select></div>
+                    <div><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="tableDept">ဌာန</label><input required id="inp-dept" type="text" class="w-full px-4 py-3 md:px-5 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-sm md:text-base" /></div>
+                    <div><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="tablePos">ရာထူး</label><input required id="inp-pos" type="text" class="w-full px-4 py-3 md:px-5 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-sm md:text-base" /></div>
+                    <div><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="phone">ဖုန်းနံပါတ်</label><input required id="inp-phone" type="tel" class="w-full px-4 py-3 md:px-5 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-sm md:text-base" /></div>
+                    <div><label class="block text-[11px] md:text-xs font-bold text-slate-500 mb-1.5" data-i18n="email">အီးမေးလ်</label><input id="inp-email" type="email" class="w-full px-4 py-3 md:px-5 md:py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-sm md:text-base" /></div>
+                </div>
+                <div class="pt-2 md:pt-4 flex flex-col sm:flex-row gap-3 md:gap-4 mt-2 border-t border-slate-100">
+                    <button type="button" onclick="appState.closeModal()" class="w-full sm:flex-1 py-3.5 md:py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-500 hover:bg-slate-50 transition-all text-sm md:text-base" data-i18n="cancel">မလုပ်တော့ပါ</button>
+                    <button type="submit" id="btn-save" class="w-full sm:flex-1 py-3.5 md:py-4 rounded-2xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 text-sm md:text-base" data-i18n="save">သိမ်းဆည်းမည်</button>
+                </div>
+            </form>
+            <div id="employee-details" class="hidden mt-2 md:mt-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 sm:gap-y-6 md:gap-y-8 gap-x-6 sm:gap-x-12">
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-location-dot text-blue-500"></i> <span data-i18n="district">ခရိုင် / ဒေသ</span></div><p id="det-dist" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-location-dot text-blue-500"></i> <span data-i18n="township">မြို့နယ်</span></div><p id="det-town" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-heart-pulse text-blue-500"></i> <span data-i18n="hospital">ဆေးရုံ</span></div><p id="det-hosp" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-building text-blue-500"></i> <span data-i18n="beds">ခုတင်အရေအတွက်</span></div><p id="det-beds" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-building text-blue-500"></i> <span data-i18n="tableDept">ဌာန</span></div><p id="det-dept" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-briefcase text-blue-500"></i> <span data-i18n="tablePos">ရာထူး</span></div><p id="det-pos" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-phone text-blue-500"></i> <span data-i18n="phone">ဖုန်းနံပါတ်</span></div><p id="det-phone" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                    <div class="space-y-1 md:space-y-1.5"><div class="flex items-center gap-2 text-slate-500 text-[11px] md:text-xs font-bold"><i class="fa-solid fa-envelope text-blue-500"></i> <span data-i18n="email">အီးမေးလ်</span></div><p id="det-email" class="text-slate-800 font-bold text-sm md:text-base">-</p></div>
+                </div>
+                <div class="pt-6 md:pt-8 border-t border-slate-100 flex gap-3 md:gap-4 mt-6 admin-only hidden">
+                    <button onclick="appState.editCurrent()" class="flex-1 flex items-center justify-center gap-2 py-3.5 md:py-4 rounded-2xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-all text-sm md:text-base"><i class="fa-solid fa-pen"></i> <span data-i18n="edit">ပြင်ဆင်ရန်</span></button>
+                    <button onclick="appState.deleteCurrent()" class="flex-1 flex items-center justify-center gap-2 py-3.5 md:py-4 rounded-2xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-all text-sm md:text-base"><i class="fa-solid fa-trash"></i> <span data-i18n="delete">ပယ်ဖျက်ရန်</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-5 py-3 md:px-6 md:py-3.5 rounded-full shadow-2xl z-[500] font-bold text-xs md:text-sm flex items-center gap-3 animate-up whitespace-nowrap"><i class="fa-solid fa-check-circle text-emerald-400 text-base md:text-lg"></i> <span id="toast-msg">Success</span></div>
+    
+    <!-- Loading Overlay -->
+    <div id="global-loader" class="hidden fixed inset-0 bg-slate-50/80 backdrop-blur-sm z-[300] flex flex-col items-center justify-center"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-4xl md:text-5xl mb-4"></i><p class="font-bold text-base md:text-lg text-blue-600" id="loader-text" data-i18n="loading">ဒေတာများ ရယူနေပါသည်...</p></div>
+
+   <!-- MAIN LOGIC WITH SUPABASE -->
+    <script>
+        // --- 1. Supabase Initialization ---
+        const SUPABASE_URL = 'https://yzgjgdithgzvrkhgykon.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Z2pnZGl0aGd6dnJraGd5a29uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTA0NjMsImV4cCI6MjA5MzEyNjQ2M30.OzeXBO3Y95nSn-ZCCqAr-XUFrU0Qkhvv5iuyIEFM4Qc';
+        
+        // အောက်ပါစာကြောင်းသည် အရေးကြီးပါသည်။ (const အစား window.supabase ဟု ပြောင်းရေးထားပါသည်)
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. Dictionaries & Data ---
+        const engToMm={'0':'၀','1':'၁','2':'၂','3':'၃','4':'၄','5':'၅','6':'၆','7':'၇','8':'၈','9':'၉'}, mmToEng={'၀':'0','၁':'1','၂':'2','၃':'3','၄':'4','၅':'5','၆':'6','၇':'7','၈':'8','၉':'9'};
+        
+        const locationData = {
+            "တောင်ကြီးခရိုင်": {
+                "တောင်ကြီး": [{name:"စပ်စံထွန်းပြည်သူ့ဆေးရုံကြီး",beds:"500"}, {name:"အမျိုးသမီးနှင့်ကလေးဆေးရုံကြီး",beds:"200"}, {name:"တောင်ကြီးတက္ကသိုလ်ဆေးရုံ",beds:"16"}, {name:"အေးသာယာတိုက်နယ်ဆေးရုံ",beds:"25"}, {name:"ရွှေညောင်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ကျောက်တလုံးတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ရပ်စောက်": [{name:"ရပ်စောက်မြို့နယ်ဆေးရုံ",beds:"50"}, {name:"အင်တောတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ပင်ဖြစ်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ကျိုင်းခမ်းတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ကျောက်ဂူတိုက်နယ်ဆေးရုံ",beds:"16"}]
+            },
+            "ကလောခရိုင်": {
+                "ကလော": [{name:"ကလောမြို့နယ်ဆေးရုံ",beds:"100"}, {name:"အောင်ပန်းတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ဟဲဟိုးတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ဘော်ဆိုင်းတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ညောင်ရွှေ": [{name:"ညောင်ရွှေမြို့နယ်ဆေးရုံ",beds:"50"}, {name:"နန်းပန်တိုက်နယ်ဆေးရုံ",beds:"50"}, {name:"ဟဲယာရွာမတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"စံကားတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ဖယ်ခုံ": [{name:"ဖယ်ခုံမြို့နယ်ဆေးရုံ",beds:"25"}, {name:"ဆီဘူးတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"မိုးဗြဲတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ပီကင်း/ခရက်ဒုန်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"လာအိတိုက်နယ်ဆေးရုံ",beds:"16"}]
+            },
+            "ပအိုဝ်း (ကိုယ်ပိုင်အုပ်ချုပ်ခွင့်ရဒေသ)": {
+                "ဟိုပုံး": [{name:"ဟိုပုံးမြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ကျောက်တန်းတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"မိုင်းပျဉ်း-ဖာလဲတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ဆီဆိုင်": [{name:"ဆီဆိုင်မြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ပချားကလိုးတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ဆိုက်ခေါင်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ဘန်းယဉ်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"နောင်ထော်တိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ပင်လောင်း": [{name:"ပင်လောင်းမြို့နယ်ဆေးရုံ",beds:"25"}, {name:"တီကျစ်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"နောင်တရားတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ဆောင်းပြောင်းတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ပေါင်းလောင်းတိုက်နယ်ဆေးရုံ",beds:"16"}]
+            },
+            "ဓနု (ကိုယ်ပိုင်အုပ်ချုပ်ခွင့်ရဒေသ)": {
+                "ပင်းတယ": [{name:"ပင်းတယမြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ပွေးလှတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"မိုင်းအင်တိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ရွာငံ": [{name:"ရွာငံမြို့နယ်ဆေးရုံ",beds:"25"}, {name:"မြိုင်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"မြို့ကြီးတိုက်နယ်ဆေးရုံ",beds:"16"}]
+            },
+            "လွိုင်လင်ခရိုင်": {
+                "လွိုင်လင်": [{name:"လွိုင်လင်ခရိုင်ပြည်သူ့ဆေးရုံ",beds:"200"}, {name:"ပင်လုံတိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"မိုင်းပွန်တိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "လဲချား": [{name:"လဲချားမြို့နယ်ဆေးရုံ",beds:"50"}],
+                "မိုင်းကိုင်": [{name:"မိုင်းကိုင်မြို့နယ်ဆေးရုံ",beds:"50"}],
+                "နမ့်စန်": [{name:"နမ့်စန်မြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ခိုလမ်မြို့နယ်ခွဲဆေးရုံ",beds:"16"}],
+                "ကွန်ဟိန်း": [{name:"ကွန်ဟိန်းမြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ကာလိတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "မိုးနဲ": [{name:"မိုးနဲမြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ကျိုင်းတောင်း(တုန်ဟုန်း)တိုက်နယ်ဆေးရုံ",beds:"16"}]
+            },
+            "မိုင်းရှူးခရိုင်": {
+                "မိုင်းရှူး": [{name:"မိုင်းရှူးခရိုင်ပြည်သူ့ဆေးရုံ",beds:"100"}, {name:"လွိုင်ဆောင်ထောက်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"မိုင်းစံတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "ကျေးသီး": [{name:"ကျေးသီးမြို့နယ်ဆေးရုံ",beds:"50"}, {name:"မိုင်းနောင်မြို့နယ်ခွဲဆေးရုံ",beds:"16"}, {name:"ဝမ်ဆင်းတိုက်နယ်ဆေးရုံ",beds:"16"}]
+            },
+            "လင်းခေးခရိုင်": {
+                "လင်းခေး": [{name:"လင်းခေးခရိုင်ပြည်သူ့ဆေးရုံ",beds:"100"}, {name:"ဝမ်ဟတ်တိုက်နယ်ဆေးရုံ",beds:"16"}, {name:"ဟိုမိန်းတိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "မောက်မယ်": [{name:"မောက်မယ်မြို့နယ်ဆေးရုံ",beds:"50"}, {name:"ဟိုနမ့်တိုက်နယ်ဆေးရုံ",beds:"16"}],
+                "မိုင်းပန်": [{name:"မိုင်းပန်မြို့နယ်ဆေးရုံ",beds:"50"}]
+            }
+        };
+
+        // Fallback or Initial Data
+        const defaultTmoData = [
+            {id: "1", no: "၁", township: "တောင်ကြီး", tsEmail: "", tmoName: "", tmoEmail: "", phone: ""},
+            {id: "2", no: "၂", township: "ညောင်ရွှေ", tsEmail: "nyaungshwetownshiphospital@gmail.com", tmoName: "ဒေါက်တာ အောင်စစ်ထွန်း", tmoEmail: "aungsittuninlay2024@gmail.com", phone: ""}
+        ];
+
+        const defaultHomeData = {
+            mapImage: null,
+            hospitals: {
+                title: "ပြည်သူ့ဆေးရုံများဖွင့်လှစ်နိုင်မှုအခြေအနေ",
+                func: [{name:"ခုတင် (၅၀၀) ဆံ့ဆေးရုံ", val:"1"}, {name:"ခုတင် (၂၀၀) ဆံ့ဆေးရုံ", val:"2"}, {name:"ခုတင် (၁၀၀) ဆံ့ဆေးရုံ", val:"7"}, {name:"ခုတင် (၅၀) ဆံ့ဆေးရုံ", val:"16"}, {name:"ခုတင် (၂၅) ဆံ့ဆေးရုံ", val:"30"}, {name:"ခုတင် (၁၆) ဆံ့ဆေးရုံ", val:"30"}],
+                funcTotal: "56",
+                closed: [{name:"ခုတင် (၅၀၀) ဆံ့ဆေးရုံ", val:"-"}, {name:"ခုတင် (၂၀၀) ဆံ့ဆေးရုံ", val:"-"}, {name:"ခုတင် (၁၀၀) ဆံ့ဆေးရုံ", val:"-"}, {name:"ခုတင် (၅၀) ဆံ့ဆေးရုံ", val:"1"}, {name:"ခုတင် (၂၅) ဆံ့ဆေးရုံ", val:"10"}, {name:"ခုတင် (၁6) ဆံ့ဆေးရုံ", val:"10"}],
+                closedTotal: "11"
+            },
+            treatments: {
+                title: "လအလိုက် ဆေးကုသရေးလုပ်ငန်းများ ‌ဆောင်ရွက်နိုင်မှုအခြေအနေ",
+                headers: ["အကြောင်းအရာ", "2024 total", "2025 Jan", "2025 Feb", "2025 Mar", "2025 April", "2025 (Jan to April)Total"],
+                rows: [
+                    ["အတွင်းလူနာစုစုပေါင်း", "71945", "7143", "6440", "6867", "7190", "27640"],
+                    ["ပြင်ပလူနာစုစုပေါင်း", "427372", "41462", "38891", "39278", "38716", "158347"]
+                ]
+            }
+        };
+
+        const t={mm:{title:"MedDash",subtitle:"ရှမ်းပြည်နယ်(တောင်ပိုင်း)ပြည်နယ်ကုသရေးဦးစီးဌာန",total:"စုစုပေါင်း ဝန်ထမ်းဦးရေ",searchPlaceholder:"ရှာရန်...",addBtn:"ဝန်ထမ်းသစ်ထည့်ရန်",exportBtn:"CSV ထုတ်မည်",importBtn:"CSV သွင်းမည်",tableId:"အမှတ်စဉ်",tableName:"အမည်",tableDept:"ဌာန / ရာထူး",tableLocation:"ခရိုင် / မြို့နယ်",tableHospital:"ဆေးရုံ / တိုက်နယ်",tableAction:"လုပ်ဆောင်ချက်",viewDetail:"အသေးစိတ်ကြည့်ရန်",edit:"ပြင်ဆင်ရန်",delete:"ပယ်ဖျက်ရန်",cancel:"မလုပ်တော့ပါ",save:"သိမ်းဆည်းမည်",update:"ပြင်ဆင်ချက်သိမ်းမည်",phone:"ဖုန်းနံပါတ်",email:"အီးမေးလ်",district:"ခရိုင် / ဒေသ",township:"မြို့နယ်",hospital:"ဆေးရုံ / တိုက်နယ်",beds:"ခုတင်အရေအတွက်",uploadPhoto:"ဓာတ်ပုံတင်ရန်",filterAllDistricts:"ခရိုင်အားလုံး",filterAllTownships:"မြို့နယ်အားလုံး",filterAllHospitals:"ဆေးရုံအားလုံး",home:"Home",dashboard:"Dashboard",language:"Language (EN / MM)",dbConnected:"Database ချိတ်ဆက်ထားပါသည်",mapTitle:"ဆေးရုံများတည်နေရာပြမြေပုံ",orgChartTitle:"ဖွဲ့စည်းပုံ",hospitalStatusTitle:"ပြည်သူ့ဆေးရုံများဖွင့်လှစ်နိုင်မှုအခြေအနေ",treatmentStatsTitle:"လအလိုက် ဆေးကုသရေးလုပ်ငန်းများ",totalDistricts:"စုစုပေါင်း ခရိုင်",totalTownships:"စုစုပေါင်း မြို့နယ်",totalEmployees:"စုစုပေါင်း ဝန်ထမ်းအင်အား",loading:"ဒေတာများ ရယူနေပါသည်...",noData:"ရှာဖွေမှုမတွေ့ရှိပါ",successAdd:"သိမ်းဆည်းပြီးပါပြီ",successUpdate:"ပြင်ဆင်ချက်များ သိမ်းဆည်းပြီးပါပြီ",successDelete:"ပယ်ဖျက်ပြီးပါပြီ",successExport:"ဒေါင်းလုဒ်ဆွဲပြီးပါပြီ",successImport:"ထည့်သွင်းပြီးပါပြီ",employeeList:"ဝန်ထမ်းအင်အားစာရင်း",hospitalList:"ဆေးရုံများ",settings:"ဆက်တင်များ",languageSetting:"ဘာသာစကားပြောင်းရန်",appVersion:"App ဗားရှင်း",tmoTitle:"TMO Contacts"},en:{title:"MedDash",subtitle:"Shan State (South) Public Health Department",total:"Total Employees",searchPlaceholder:"Search...",addBtn:"Add Employee",exportBtn:"Export CSV",importBtn:"Import CSV",tableId:"ID",tableName:"Name",tableDept:"Department",tableLocation:"Location",tableHospital:"Hospital",tableAction:"Action",viewDetail:"View Details",edit:"Edit",delete:"Delete",cancel:"Cancel",save:"Save",update:"Update",phone:"Phone",email:"Email",district:"District",township:"Township",hospital:"Hospital",beds:"Beds",uploadPhoto:"Upload Photo",filterAllDistricts:"All Districts",filterAllTownships:"All Townships",filterAllHospitals:"All Hospitals",home:"Home",dashboard:"Dashboard",language:"Language (EN / MM)",dbConnected:"Auto Database Connected",mapTitle:"Hospital Location Map",orgChartTitle:"Org Chart",hospitalStatusTitle:"Public Hospitals Status",treatmentStatsTitle:"Monthly Healthcare Activities",totalDistricts:"Total Districts",totalTownships:"Total Townships",totalEmployees:"Total Employees",loading:"Fetching data...",noData:"No results found",successAdd:"Added successfully",successUpdate:"Updated successfully",successDelete:"Removed successfully",successExport:"Exported successfully",successImport:"Imported successfully",employeeList:"Employee List",hospitalList:"Hospitals",settings:"Settings",languageSetting:"Change Language",appVersion:"App Version",tmoTitle:"TMO Contacts"}};
+
+        // --- 3. Main Application State ---
+        window.appState = {
+            user: null, isAdmin: false, lang: 'mm', view: 'home', 
+            employees: [], // Data is strictly empty by default for security
+            homeData: defaultHomeData, 
+            tmoList: [],   // Data is strictly empty by default for security
+            activityLogs: [], menuOpen: false, previewImage: null, editingEmp: null, filters: { dist: '', town: '', hosp: '', search: '' }, isEditingHosp: false, isEditingTreat: false, isEditingTMO: false, hospChart: null, tmoSearchTerm: '', mapZoomLevel: 1, isDraggingMap: false, mapStartX: 0, mapStartY: 0, mapScrollLeft: 0, mapScrollTop: 0,
+            
+            toMM(str) { if(str===null||str===undefined)return''; return String(str).replace(/[0-9]/g, c=>engToMm[c]||c); },
+            toEng(str) { if(str===null||str===undefined)return''; return String(str).replace(/[၀-၉]/g, c=>mmToEng[c]||c); },
+            parseCSV(text) {
+                let res=[], row=[], inQ=false, val='';
+                for(let i=0; i<text.length; i++){ let c=text[i]; if(c==='"' && text[i+1]==='"'){val+='"'; i++;} else if(c==='"') inQ=!inQ; else if(c===',' && !inQ){row.push(val); val='';} else if(c==='\n' && !inQ){row.push(val); val=''; res.push(row); row=[];} else if(c!=='\r') val+=c; }
+                row.push(val); res.push(row); return res.filter(r=>r.join('').trim()!=='');
+            },
+            
+            logActivity(action, details) {
+                if (!this.isAdmin || !this.user) return;
+                const logEntry = { timestamp: new Date().toISOString(), email: this.user.email || 'Admin', action: action, details: details };
+                this.activityLogs.unshift(logEntry); 
+                if (this.activityLogs.length > 50) this.activityLogs.pop();
+                this.renderLogs();
+            },
+            
+            renderLogs() {
+                const container = document.getElementById('audit-log-container');
+                if(!container) return;
+                if(this.activityLogs.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-slate-400 p-4 text-center font-bold">No recent activity found.</p>`; return;
+                }
+                container.innerHTML = this.activityLogs.map(log => `
+                    <div class="flex flex-col py-2 border-b border-slate-50 last:border-0 px-2 hover:bg-slate-50 transition-colors rounded">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-slate-700">${log.action}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${new Date(log.timestamp).toLocaleDateString()} ${new Date(log.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500"><i class="fa-solid fa-user-shield text-slate-300 mr-1"></i> ${log.email}: ${log.details}</span>
+                    </div>
+                `).join('');
+            },
+
+            exportFullBackup() {
+                if (!this.isAdmin) return;
+                const backupData = { timestamp: new Date().toISOString(), version: "2.5 Pro Secured", employees: this.employees, tmoList: this.tmoList, homeData: this.homeData, activityLogs: this.activityLogs };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", `MedDash_Backup_${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove();
+                this.showToast('successExport'); this.logActivity('System Backup', 'Downloaded full JSON backup');
+            },
+
+            openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); },
+            closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); },
+            
+            // --- 4. SECURE DATA LOGIC (Replacing Firebase with Supabase) ---
+
+            async initSupabase() {
+                const { data: { session } } = await supabase.auth.getSession();
+                this.handleAuthChange(session?.user || null);
+                
+                supabase.auth.onAuthStateChange((event, session) => {
+                    this.handleAuthChange(session?.user || null);
+                });
+            },
+
+            handleAuthChange(user) {
+                this.user = user;
+                this.isAdmin = !!user;
+                this.updateStatus(this.isAdmin);
+                this.updateAdminUI();
+
+                this.fetchCloudData();
+            },
+
+            async loginAdmin(e) {
+                e.preventDefault(); 
+                const em = document.getElementById('login-email').value;
+                const pw = document.getElementById('login-pwd').value;
+                const loader = document.getElementById('global-loader');
+                
+                try { 
+                    if(loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Logging in..."; }
+                    const { error } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+                    if (error) throw error;
+                    this.closeLoginModal(); 
+                    this.showToast('successUpdate'); // Map to 'success' visually
+                    this.logActivity('System Login', 'Admin logged in'); 
+                } catch(error) { 
+                    alert("Login Failed. Please check credentials."); 
+                } finally { 
+                    if(loader) loader.classList.add('hidden'); 
+                }
+            },
+
+            async logoutAdmin() { 
+                try { 
+                    await supabase.auth.signOut(); 
+                    this.showToast('successUpdate'); 
+                    this.setView('home'); 
+                } catch(error) { console.error(error); } 
+            },
+
+            async fetchCloudData() {
+                // Fetch public home state first
+                try {
+                    const { data: homeState, error: homeErr } = await supabase.from('meddash_state').select('*').eq('id', 'main_doc').maybeSingle();
+                    if (homeState && !homeErr) {
+                        this.homeData = homeState.homeData || defaultHomeData;
+                        this.activityLogs = homeState.activityLogs || [];
+                    }
+                } catch (e) {
+                    console.error("Home state fetch error", e);
+                }
+
+                if (!this.isAdmin) {
+                    // SECURITY FIX: Explicitly purge memory arrays when not logged in
+                    this.employees = [];
+                    this.tmoList = [];
+                    this.refreshUI();
+                    return;
+                }
+                
+                // Fetch Sensitive Tables
+                try {
+                    const { data: empData, error: empErr } = await supabase.from('employees').select('*');
+                    if (empData && !empErr) this.employees = empData; else this.employees = [];
+
+                    const { data: tmoData, error: tmoErr } = await supabase.from('tmo_contacts').select('*');
+                    if (tmoData && !tmoErr) this.tmoList = tmoData; else this.tmoList = [];
+
+                    this.refreshUI();
+                    if(this.view === 'settings') this.renderLogs();
+                } catch (e) {
+                    console.error("Fetch block by RLS or Network Error", e);
+                }
+            },
+
+            async pushToCloud() {
+                if(!this.isAdmin) return;
+                try {
+                    await supabase.from('meddash_state').upsert({ id: 'main_doc', homeData: this.homeData, activityLogs: this.activityLogs });
+
+                    // Sync arrays to DB using upsert mapping based on existing structures
+                    if (this.employees.length > 0) {
+                        await supabase.from('employees').upsert(this.employees);
+                    }
+                    if (this.tmoList.length > 0) {
+                        await supabase.from('tmo_contacts').upsert(this.tmoList);
+                    }
+                } catch(e) { console.error("Cloud Save Failed", e); }
+            },
+
+            updateStatus(isActive) {
+                const bulb = document.getElementById('status-bulb'), text = document.getElementById('db-status-text'); if(!bulb || !text) return;
+                if (isActive) { bulb.className = "w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"; text.innerText = "Admin Cloud"; } 
+                else { bulb.className = "w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"; text.innerText = "Public Sync"; }
+            },
+
+            updateAdminUI() {
+                // UI Visuals (Hiding buttons from viewers dynamically)
+                ['nav-tmo', 'nav-dashboard'].forEach(id => { const el=document.getElementById(id); if(el)el.classList.toggle('hidden', !this.isAdmin); });
+                document.querySelectorAll('.admin-only').forEach(el => { if(this.isAdmin) el.classList.remove('hidden'); else el.classList.add('hidden'); });
+                ['nav-login', 'nav-login-mobile'].forEach(id => { const el=document.getElementById(id); if(el)el.classList.toggle('hidden', this.isAdmin); });
+                ['nav-logout', 'nav-logout-mobile'].forEach(id => { const el=document.getElementById(id); if(el)el.classList.toggle('hidden', !this.isAdmin); });
+                if(!this.isAdmin) { this.isEditingHosp = false; this.isEditingTreat = false; this.isEditingTMO = false; }
+            },
+            
+            // --- 5. User Interface Interactions ---
+
+            openMapModal() {
+                document.getElementById('map-modal').classList.remove('hidden'); this.mapZoomLevel = 1;
+                const img = document.getElementById('map-zoom-img'), container = document.getElementById('map-scroll-container');
+                if (img) img.style.transform = `scale(1)`;
+                if (container && img) {
+                    img.onmousedown = (e) => { this.isDraggingMap = true; this.mapStartX = e.pageX - container.offsetLeft; this.mapStartY = e.pageY - container.offsetTop; this.mapScrollLeft = container.scrollLeft; this.mapScrollTop = container.scrollTop; };
+                    window.onmouseup = () => { this.isDraggingMap = false; };
+                    container.onmousemove = (e) => { if (!this.isDraggingMap) return; e.preventDefault(); container.scrollLeft = this.mapScrollLeft - ((e.pageX - container.offsetLeft - this.mapStartX) * 2); container.scrollTop = this.mapScrollTop - ((e.pageY - container.offsetTop - this.mapStartY) * 2); };
+                }
+            },
+            closeMapModal() { document.getElementById('map-modal').classList.add('hidden'); this.isDraggingMap = false; },
+            zoomMap(delta) { if (delta === 0) this.mapZoomLevel = 1; else this.mapZoomLevel = Math.max(0.5, Math.min(this.mapZoomLevel + delta, 5)); const img = document.getElementById('map-zoom-img'); if (img) img.style.transform = `scale(${this.mapZoomLevel})`; },
+            uploadMapImage(e) {
+                const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+                reader.onload = (event) => { const img = new Image(); img.onload = async () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 1200; let w = img.width, h = img.height; if (w > MAX_WIDTH) { h = Math.round((MAX_WIDTH / w) * h); w = MAX_WIDTH; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); this.homeData.mapImage = canvas.toDataURL('image/jpeg', 0.85); this.refreshUI(); this.logActivity('Map Updated', 'Uploaded new hospital map'); await this.pushToCloud(); }; img.src = event.target.result; };
+                reader.readAsDataURL(file);
+            },
+            async removeMapImage() { if(confirm("ဖျက်ရန် သေချာပါသလား?")) { this.homeData.mapImage = null; this.refreshUI(); this.logActivity('Map Removed', 'Deleted hospital map'); await this.pushToCloud(); } },
+            async toggleEditHosp() {
+                this.isEditingHosp = !this.isEditingHosp;
+                if (!this.isEditingHosp) {
+                    document.querySelectorAll('.hosp-edit-cell').forEach(cell => { const type = cell.getAttribute('data-type'), idx = cell.getAttribute('data-idx'), val = this.toEng(cell.innerText.trim()); if (type === 'func-name') this.homeData.hospitals.func[idx].name = cell.innerText.trim(); if (type === 'func-val') this.homeData.hospitals.func[idx].val = val; if (type === 'closed-name') this.homeData.hospitals.closed[idx].name = cell.innerText.trim(); if (type === 'closed-val') this.homeData.hospitals.closed[idx].val = val; if (type === 'title') this.homeData.hospitals.title = cell.innerText.trim(); });
+                    let fTotal = 0, cTotal = 0; this.homeData.hospitals.func.forEach(item => { let v = parseInt(item.val); if(!isNaN(v)) fTotal += v; }); this.homeData.hospitals.closed.forEach(item => { let v = parseInt(item.val); if(!isNaN(v)) cTotal += v; });
+                    this.homeData.hospitals.funcTotal = fTotal.toString(); this.homeData.hospitals.closedTotal = cTotal.toString(); this.renderHomeStats(); this.logActivity('Hospital Status Updated', 'Updated operational hospital counts'); await this.pushToCloud();
+                } else this.renderHomeStats();
+            },
+            async toggleEditTreat() {
+                this.isEditingTreat = !this.isEditingTreat;
+                if (!this.isEditingTreat) {
+                    document.querySelectorAll('.treat-edit-cell').forEach(cell => { const rIdx = cell.getAttribute('data-r'), cIdx = cell.getAttribute('data-c'), val = this.toEng(cell.innerText.trim()); if (rIdx === 'header') this.homeData.treatments.headers[cIdx] = cell.innerText.trim(); else if (rIdx === 'title') this.homeData.treatments.title = cell.innerText.trim(); else this.homeData.treatments.rows[rIdx][cIdx] = val; });
+                    this.renderHomeStats(); this.logActivity('Treatment Stats Updated', 'Updated monthly statistics'); await this.pushToCloud();
+                } else this.renderHomeStats();
+            },
+            updateTMOFilters() { this.tmoSearchTerm = document.getElementById('tmoSearchInput').value.toLowerCase(); this.renderTMOTable(); },
+            async toggleEditTMO() {
+                this.isEditingTMO = !this.isEditingTMO;
+                if (!this.isEditingTMO) {
+                    document.querySelectorAll('.tmo-edit-cell').forEach(cell => { const rIdx = cell.getAttribute('data-idx'), field = cell.getAttribute('data-field'), val = cell.innerText.trim(); if(this.tmoList[rIdx]) { if (field === 'no' || field === 'phone') this.tmoList[rIdx][field] = this.toEng(val); else this.tmoList[rIdx][field] = val; } });
+                    this.renderTMOTable(); this.logActivity('TMO List Updated', 'Edited TMO contact table manually'); await this.pushToCloud();
+                } else this.renderTMOTable();
+            },
+            refreshUI() { this.updateAdminUI(); this.renderTable(); this.renderHomeStats(); this.renderHospitalsList(); this.renderTMOTable(); },
+            setView(v) {
+                if(!this.isAdmin && (v === 'tmo' || v === 'dashboard')) { v = 'home'; }
+                this.view = v;
+                ['home','orgchart','hospitals','tmo','dashboard','settings'].forEach(id => { const el = document.getElementById('view-' + id), navEl = document.getElementById('nav-' + id); if(el) el.classList.toggle('hidden', v !== id); if(navEl && !navEl.classList.contains('hidden')) navEl.className = v === id ? 'flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400'; });
+                if(v === 'tmo') this.renderTMOTable(); if(v === 'home') this.renderHomeStats(); if(v === 'settings') this.renderLogs();
+            },
+            toggleMenu() { this.menuOpen = !this.menuOpen; const menu = document.getElementById('dropdown-menu'); if (menu) menu.classList.toggle('hidden', !this.menuOpen); },
+            toggleLanguage() { this.lang = this.lang === 'mm' ? 'en' : 'mm'; const langIndicator = document.getElementById('settings-lang-indicator'); if (langIndicator) langIndicator.innerText = this.lang.toUpperCase(); this.updateUITexts(); this.refreshUI(); },
+            updateUITexts() { const dict = t[this.lang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (dict[key]) el.innerHTML = dict[key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (dict[key]) el.placeholder = dict[key]; }); },
+            showToast(key) { const msg = t[this.lang]?.[key] || key; const toast = document.getElementById('toast'); if (toast) { document.getElementById('toast-msg').innerText = msg; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); } },
+            initFilters() { const fDist = document.getElementById('filterDist'); if (fDist) fDist.innerHTML = `<option value="" data-i18n="filterAllDistricts">${t[this.lang].filterAllDistricts}</option>` + Object.keys(locationData).map(d => `<option value="${d}">${d}</option>`).join(''); },
+            updateFilters() {
+                const searchEl = document.getElementById('searchInput'), filterDistEl = document.getElementById('filterDist');
+                if (searchEl) this.filters.search = searchEl.value.toLowerCase();
+                if (filterDistEl) {
+                    const oldDist = this.filters.dist; this.filters.dist = filterDistEl.value; const fTown = document.getElementById('filterTown'), fHosp = document.getElementById('filterHosp');
+                    if (this.filters.dist !== oldDist) {
+                        this.filters.town = ''; this.filters.hosp = '';
+                        if (this.filters.dist && fTown) { fTown.disabled = false; fTown.innerHTML = `<option value="" data-i18n="filterAllTownships">${t[this.lang].filterAllTownships}</option>` + Object.keys(locationData[this.filters.dist]).map(town => `<option value="${town}">${town}</option>`).join(''); } 
+                        else if (fTown && fHosp) { fTown.disabled = true; fTown.innerHTML = `<option value="" data-i18n="filterAllTownships">${t[this.lang].filterAllTownships}</option>`; fHosp.disabled = true; fHosp.innerHTML = `<option value="" data-i18n="filterAllHospitals">${t[this.lang].filterAllHospitals}</option>`; }
+                    } else if (fTown) this.filters.town = fTown.value;
+                    if (this.filters.town && fHosp) { fHosp.disabled = false; fHosp.innerHTML = `<option value="" data-i18n="filterAllHospitals">${t[this.lang].filterAllHospitals}</option>` + locationData[this.filters.dist][this.filters.town].map(h => `<option value="${h.name}">${h.name}</option>`).join(''); } 
+                    else if (fHosp) { fHosp.disabled = true; fHosp.innerHTML = `<option value="" data-i18n="filterAllHospitals">${t[this.lang].filterAllHospitals}</option>`; }
+                    if (fHosp) this.filters.hosp = fHosp.value;
+                }
+                this.renderTable();
+            },
+            handleImageUpload(e) {
+                const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+                reader.onload = (event) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX = 250; let w = img.width, h = img.height; if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); this.previewImage = canvas.toDataURL('image/jpeg', 0.8); const pImg = document.getElementById('preview-img'), pIcon = document.getElementById('preview-icon'); if (pImg) { pImg.src = this.previewImage; pImg.classList.remove('hidden'); } if (pIcon) pIcon.classList.add('hidden'); }; img.src = event.target.result; };
+                reader.readAsDataURL(file);
+            },
+            openModal(emp = null) {
+                this.editingEmp = emp; this.previewImage = emp ? emp.photo : null; document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById('employee-modal').classList.remove('hidden');
+                if (emp) {
+                    document.getElementById('modal-header-view').classList.remove('hidden'); document.getElementById('modal-header-add').classList.add('hidden'); document.getElementById('employee-form').classList.add('hidden'); document.getElementById('employee-details').classList.remove('hidden');
+                    document.getElementById('detail-name').innerText = emp.full_name; document.getElementById('detail-id').innerText = this.toMM(emp.emp_id); document.getElementById('det-dist').innerText = emp.district || '-'; document.getElementById('det-town').innerText = emp.township || '-'; document.getElementById('det-hosp').innerText = emp.hospital ? `${emp.hospital} (${this.toMM(emp.beds)} ခုတင်)` : '-'; document.getElementById('det-dept').innerText = emp.department; document.getElementById('det-pos').innerText = emp.designation; document.getElementById('det-phone').innerText = this.toMM(emp.phone); document.getElementById('det-email').innerText = emp.email || '-';
+                    const detailPhoto = document.getElementById('detail-photo'), detailPlaceholder = document.getElementById('detail-photo-placeholder');
+                    if (emp.photo && detailPhoto && detailPlaceholder) { detailPhoto.src = emp.photo; detailPhoto.classList.remove('hidden'); detailPlaceholder.classList.add('hidden'); } else if (detailPhoto && detailPlaceholder) { detailPhoto.classList.add('hidden'); detailPlaceholder.classList.remove('hidden'); detailPlaceholder.innerText = emp.full_name.charAt(0); }
+                    const btnEditPhoto = document.getElementById('btn-edit-photo'); if(btnEditPhoto) btnEditPhoto.classList.add('hidden');
+                } else {
+                    document.getElementById('modal-header-view').classList.add('hidden'); document.getElementById('modal-header-add').classList.remove('hidden'); document.getElementById('employee-form').classList.remove('hidden'); document.getElementById('employee-details').classList.add('hidden'); document.getElementById('employee-form').reset(); document.getElementById('emp-id').value = '';
+                    const pImg = document.getElementById('preview-img'), pIcon = document.getElementById('preview-icon');
+                    if(pImg) pImg.classList.add('hidden'); if(pIcon) pIcon.classList.remove('hidden');
+                    document.getElementById('btn-save').innerText = t[this.lang].save; this.populateModalDropdowns(Object.keys(locationData)[0], null, null);
+                }
+            },
+            editCurrent() {
+                if (!this.editingEmp || !this.isAdmin) return; const emp = this.editingEmp; document.getElementById('modal-header-view').classList.remove('hidden'); document.getElementById('employee-form').classList.remove('hidden'); document.getElementById('employee-details').classList.add('hidden'); const btnEditPhoto = document.getElementById('btn-edit-photo'); if(btnEditPhoto) btnEditPhoto.classList.remove('hidden'); document.getElementById('btn-save').innerText = t[this.lang].update;
+                document.getElementById('emp-id').value = emp.id; document.getElementById('inp-name').value = emp.full_name; document.getElementById('inp-dept').value = emp.department; document.getElementById('inp-pos').value = emp.designation; document.getElementById('inp-phone').value = emp.phone; document.getElementById('inp-email').value = emp.email || '';
+                this.populateModalDropdowns(emp.district, emp.township, emp.hospital);
+                const pImg = document.getElementById('preview-img'), pIcon = document.getElementById('preview-icon');
+                if (this.previewImage && pImg && pIcon) { pImg.src = this.previewImage; pImg.classList.remove('hidden'); pIcon.classList.add('hidden'); } else if (pImg && pIcon) { pImg.classList.add('hidden'); pIcon.classList.remove('hidden'); }
+            },
+            closeModal() { const backdrop = document.getElementById('modal-backdrop'), modal = document.getElementById('employee-modal'); if(backdrop) backdrop.classList.add('hidden'); if(modal) modal.classList.add('hidden'); this.editingEmp = null; },
+            populateModalDropdowns(d, twn, h) {
+                const dSel = document.getElementById('inp-district'), tSel = document.getElementById('inp-township'), hSel = document.getElementById('inp-hospital');
+                if (dSel) { dSel.innerHTML = Object.keys(locationData).map(k => `<option value="${k}">${k}</option>`).join(''); dSel.value = d || Object.keys(locationData)[0]; }
+                if (tSel && dSel) { const townKeys = Object.keys(locationData[dSel.value] || {}); tSel.innerHTML = townKeys.map(k => `<option value="${k}">${k}</option>`).join(''); tSel.value = twn || townKeys[0]; }
+                if (hSel && dSel && tSel) { const hospArr = locationData[dSel.value]?.[tSel.value] || []; hSel.innerHTML = hospArr.map(k => `<option value="${k.name}">${k.name} (${this.toMM(k.beds)} ခုတင်)</option>`).join(''); hSel.value = h || hospArr[0]?.name; }
+            },
+            updateModalTownships() { const dSel = document.getElementById('inp-district'); if(dSel) this.populateModalDropdowns(dSel.value, null, null); },
+            updateModalHospitals() { const dSel = document.getElementById('inp-district'); const tSel = document.getElementById('inp-township'); if(dSel && tSel) this.populateModalDropdowns(dSel.value, tSel.value, null); },
+            
+            async saveEmployee(e) {
+                e.preventDefault(); if(!this.isAdmin) return; 
+                const id = document.getElementById('emp-id').value, dist = document.getElementById('inp-district').value, town = document.getElementById('inp-township').value, hosp = document.getElementById('inp-hospital').value, bedsObj = locationData[dist]?.[town]?.find(x => x.name === hosp);
+                const data = { full_name: document.getElementById('inp-name').value, department: document.getElementById('inp-dept').value, designation: document.getElementById('inp-pos').value, district: dist, township: town, hospital: hosp, beds: bedsObj ? bedsObj.beds : '', phone: this.toEng(document.getElementById('inp-phone').value), email: document.getElementById('inp-email').value, photo: this.previewImage || "" };
+                if (id) { 
+                    const index = this.employees.findIndex(emp => emp.id === id); 
+                    if (index !== -1) { 
+                        this.employees[index] = { ...this.employees[index], ...data }; 
+                        this.renderTable(); 
+                        this.logActivity('Employee Updated', data.full_name);
+                        await this.pushToCloud(); 
+                        this.showToast('successUpdate'); 
+                    } 
+                } 
+                else { 
+                    data.id = Date.now().toString() + Math.floor(Math.random() * 1000); 
+                    data.emp_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`; 
+                    data.join_date = new Date().toISOString().split('T')[0]; 
+                    data.status = "Active"; 
+                    data.created_at = new Date().toISOString(); 
+                    this.employees.push(data); 
+                    this.renderTable(); 
+                    this.logActivity('Employee Added', data.full_name);
+                    await this.pushToCloud(); 
+                    this.showToast('successAdd'); 
+                }
+                this.closeModal();
+            },
+            
+           async deleteCurrent() { 
+                if (!this.editingEmp || !this.isAdmin) return; 
+                if (confirm("ဖျက်ရန် သေချာပါသလား?")) { 
+                    try {
+                        const deletedName = this.editingEmp.full_name; 
+                        
+                        // Execute real backend deletion
+                        const { error } = await supabase.from('employees').delete().eq('id', this.editingEmp.id);
+                        if (error) throw error;
+
+                        this.employees = this.employees.filter(emp => emp.id !== this.editingEmp.id); 
+                        this.renderTable(); 
+                        this.logActivity('Employee Deleted', deletedName); 
+                        // Update the rest of the state in the cloud
+                        await this.pushToCloud(); 
+                        this.showToast('successDelete'); 
+                        this.closeModal(); 
+                    } catch(err) {
+                        console.error("Delete failed", err);
+                        alert("ဖျက်ရာတွင် အခက်အခဲရှိပါသည်။");
+                    }
+                } 
+            },
+            triggerDownload(filename, csvContent) { const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); },
+            exportCSV() {
+                const headers = ['ID', 'Name', 'Department', 'Position', 'District', 'Township', 'Hospital', 'Beds', 'Phone', 'Email', 'Join Date', 'Status']; const ws_data = [headers];
+                this.employees.forEach(emp => { ws_data.push([ emp.emp_id, emp.full_name, emp.department, emp.designation, emp.district||'', emp.township||'', emp.hospital||'', emp.beds||'', emp.phone, emp.email||'', emp.join_date, emp.status ]); });
+                const csvContent = '\uFEFF' + ws_data.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+                this.triggerDownload('Employee_List.csv', csvContent); this.showToast('successExport');
+            },
+            exportHomeHosp() {
+                const hd = this.homeData.hospitals, ws_data = [ [hd.title], ["လုပ်ငန်းဆောင်ရွက်နိုင်သောဆေးရုံများ", "", "လုပ်ငန်းရပ်ဆိုင်းနေသော‌ဆေးရုံများ", ""], ["ခုတင်အဆင့်", "အရေအတွက်", "ခုတင်အဆင့်", "အရေအတွက်"] ]; const maxRows = Math.max(hd.func.length, hd.closed.length);
+                for(let i=0; i<maxRows; i++) { let f = hd.func[i] || {name: "", val: ""}; let c = hd.closed[i] || {name: "", val: ""}; ws_data.push([f.name, f.val, c.name, c.val]); }
+                ws_data.push(["စုစုပေါင်း", hd.funcTotal, "စုစုပေါင်း", hd.closedTotal]);
+                const csvContent = '\uFEFF' + ws_data.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+                this.triggerDownload('Hospital_Status.csv', csvContent);
+            },
+            exportHomeTreat() { const td = this.homeData.treatments, ws_data = [[td.title], td.headers, ...td.rows]; const csvContent = '\uFEFF' + ws_data.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n'); this.triggerDownload('Treatment_Stats.csv', csvContent); },
+            exportTMOCSV() { const headers = ['စဉ်', 'မြို့နယ်', 'မြို့နယ် Email လိပ်စာ', 'TMO အမည်', 'TMO Email လိပ်စာ', 'ဖုန်းနံပါတ်'], rows = this.tmoList.map(t => [t.no, t.township, t.tsEmail, t.tmoName, t.tmoEmail, t.phone]); const csvContent = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n'); this.triggerDownload('TMO_Contact_List.csv', csvContent); this.showToast('successExport'); },
+            mapLocationName(input, type, parentVal = null) {
+                if(!input) return ''; const normalized = input.trim().toLowerCase().replace(/\s+/g, '');
+                if (type === 'district') { for(const key of Object.keys(locationData)) { const cleanKey = key.toLowerCase().replace(/\s+/g, ''), shortKey = cleanKey.replace(/\(.+\)/,''); if(cleanKey.includes(normalized) || normalized.includes(shortKey)) return key; } } 
+                else if (type === 'township' && parentVal && locationData[parentVal]) { for(const key of Object.keys(locationData[parentVal])) { const cleanKey = key.toLowerCase().replace(/\s+/g, ''); if(cleanKey.includes(normalized) || normalized.includes(cleanKey)) return key; } } 
+                else if (type === 'hospital' && parentVal && locationData[parentVal.dist]?.[parentVal.town]) { for(const h of locationData[parentVal.dist][parentVal.town]) { const cleanKey = h.name.toLowerCase().replace(/\s+/g, ''); if(cleanKey.includes(normalized) || normalized.includes(cleanKey)) return h.name; } }
+                return input.trim();
+            },
+            importCSV(e) {
+                const file = e.target.files[0]; if (!file || !this.isAdmin) return; const loader = document.getElementById('global-loader'); if(loader) loader.classList.remove('hidden'); const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text);
+                        if (lines.length > 1) {
+                            const headers = lines[0].map(h => String(h).trim()); let importedCount = 0;
+                            for (let i = 1; i < lines.length; i++) {
+                                const currentline = lines[i]; if(!currentline || currentline.length < 2) continue; let row = {}; headers.forEach((h, j) => { row[h] = currentline[j] ? String(currentline[j]).trim() : ''; });
+                                if (row['Name'] || row['အမည်']) {
+                                    const rawDist = row['District'] || row['ခရိုင်'] || '', rawTown = row['Township'] || row['မြို့နယ်'] || '', rawHosp = row['Hospital'] || row['ဆေးရုံ'] || '';
+                                    const smartDist = this.mapLocationName(rawDist, 'district'), smartTown = this.mapLocationName(rawTown, 'township', smartDist), smartHosp = this.mapLocationName(rawHosp, 'hospital', {dist: smartDist, town: smartTown}), bedsObj = locationData[smartDist]?.[smartTown]?.find(x => x.name === smartHosp);
+                                    let emp = { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), emp_id: row['ID'] || row['အမှတ်စဉ်'] || `EMP-${Math.floor(1000 + Math.random() * 9000)}`, full_name: row['Name'] || row['အမည်'] || '', department: row['Department'] || row['ဌာန'] || '', designation: row['Position'] || row['ရာထူး'] || '', district: smartDist, township: smartTown, hospital: smartHosp, beds: bedsObj ? bedsObj.beds : (row['Beds'] || row['ခုတင်အရေအတွက်'] || ''), phone: this.toEng(row['Phone'] || row['ဖုန်းနံပါတ်'] || row['ဖုန်း'] || ''), email: row['Email'] || row['အီးမေးလ်'] || '', join_date: row['Join Date'] || new Date().toISOString().split('T')[0], status: row['Status'] || 'Active', photo: "", created_at: new Date().toISOString() };
+                                    this.employees.push(emp); importedCount++;
+                                }
+                            }
+                            if (importedCount > 0) { this.renderTable(); this.logActivity('Data Import', `Imported ${importedCount} employee records`); await this.pushToCloud(); this.showToast('successImport'); } else alert("ဒေတာများ မတွေ့ရှိပါ။");
+                        }
+                    } catch(err) { alert("Error."); console.error(err); }
+                    if(loader) loader.classList.add('hidden'); e.target.value = null;
+                };
+                reader.readAsText(file);
+            },
+            importHomeCSV(e) {
+                const file = e.target.files[0]; if (!file || !this.isAdmin) return; const loader = document.getElementById('global-loader'); if(loader) loader.classList.remove('hidden'); const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text); if(lines.length < 2) { if(loader) loader.classList.add('hidden'); return; }
+                        const titleText = String(lines[0][0] || '').trim().replace(/^"|"$/g, '');
+                        if(titleText.includes('ဖွင့်လှစ်နိုင်မှုအခြေအနေ') || String(lines[1]).includes('လုပ်ငန်းဆောင်ရွက်နိုင်သော')) {
+                            let fHosp = [], cHosp = []; let fTotal = 0, cTotal = 0;
+                            for(let i=3; i<lines.length; i++) {
+                                const lineText = lines[i].join(''); if(!lineText.trim()) continue; const cols = lines[i].map(c => String(c).replace(/^"|"$/g, '').trim());
+                                let fName = cols[0], fCount = this.toEng(cols[1]), cName = cols[2], cCount = this.toEng(cols[3]);
+                                if(fName && !fName.includes('စုစုပေါင်း')) { fHosp.push({name: fName, val: fCount}); let v = parseInt(fCount); if(!isNaN(v)) fTotal += v; }
+                                if(cName && !cName.includes('စုစုပေါင်း')) { cHosp.push({name: cName, val: cCount}); let v = parseInt(cCount); if(!isNaN(v)) cTotal += v; }
+                            }
+                            this.homeData.hospitals = { title: titleText || this.homeData.hospitals.title, func: fHosp, funcTotal: fTotal.toString(), closed: cHosp, closedTotal: cTotal.toString() };
+                            this.renderHomeStats(); this.logActivity('Data Import', 'Imported Hospital Status CSV'); await this.pushToCloud(); this.showToast('successUpdate');
+                        } else if(titleText.includes('ဆေးကုသရေးလုပ်ငန်းများ') || String(lines[1]).includes('အကြောင်းအရာ')) {
+                            const headers = lines[1].map(c => String(c).trim().replace(/^"|"$/g, '')); let rows = [];
+                            for(let i=2; i<lines.length; i++) { if(lines[i].join('').trim() === '') continue; let cols = lines[i].map(c => this.toEng(String(c).replace(/^"|"$/g, '').trim())); rows.push(cols); }
+                            this.homeData.treatments = { title: titleText || this.homeData.treatments.title, headers: headers, rows: rows };
+                            this.renderHomeStats(); this.logActivity('Data Import', 'Imported Treatment Stats CSV'); await this.pushToCloud(); this.showToast('successUpdate');
+                        } else alert("Error format.");
+                    } catch(err) { alert("Error."); console.error(err); }
+                    if(loader) loader.classList.add('hidden'); e.target.value = null;
+                };
+                reader.readAsText(file);
+            },
+            importTMOCSV(e) {
+                const file = e.target.files[0]; if (!file || !this.isAdmin) return; const loader = document.getElementById('global-loader'); if(loader) loader.classList.remove('hidden'); const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text);
+                        if (lines.length > 1) {
+                            const headers = lines[0].map(h => String(h).trim()); let newTmoList = [];
+                            for(let i=1; i<lines.length; i++) { let cols = lines[i].map(c => this.toEng(String(c).trim())); if(cols.length < 2) continue; newTmoList.push({ id: Date.now().toString()+i, no: cols[0] || "", township: cols[1] || "", tsEmail: cols[2] || "", tmoName: cols[3] || "", tmoEmail: cols[4] || "", phone: cols[5] || "" }); }
+                            if (newTmoList.length > 0) { this.tmoList = newTmoList; this.renderTMOTable(); this.logActivity('Data Import', 'Imported new TMO Contact List'); await this.pushToCloud(); this.showToast('successImport'); }
+                        } else alert("Error format.");
+                    } catch(err) { alert("Error."); console.error(err); }
+                    if(loader) loader.classList.add('hidden'); e.target.value = null;
+                };
+                reader.readAsText(file);
+            },
+            renderTMOTable() {
+                const tbody = document.getElementById('tmo-table-body'); if(!tbody) return; 
+                // Security Check inside Render
+                if (!this.isAdmin) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold">Log in required</td></tr>`;
+                    return;
+                }
+
+                const editStyle = 'contenteditable="true" style="background:#fef9c3; outline: 1px dashed #eab308; padding: 4px 8px; border-radius: 6px; min-width: 30px; display: inline-block;"';
+                let filteredList = this.tmoList.map((tmo, idx) => ({ ...tmo, _origIdx: idx }));
+                if(this.tmoSearchTerm) { filteredList = filteredList.filter(t => (t.township && t.township.toLowerCase().includes(this.tmoSearchTerm)) || (t.tmoName && t.tmoName.toLowerCase().includes(this.tmoSearchTerm)) || (t.tmoEmail && t.tmoEmail.toLowerCase().includes(this.tmoSearchTerm))); }
+                if (filteredList.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold">ရှာဖွေမှုမတွေ့ရှိပါ</td></tr>`; return; }
+                tbody.innerHTML = filteredList.map(tmo => {
+                    const i = tmo._origIdx;
+                    return `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-none">
+                        <td class="py-4 px-4 text-center font-bold text-slate-500 tmo-edit-cell" data-idx="${i}" data-field="no" ${this.isEditingTMO ? editStyle : ''}>${this.toMM(tmo.no)}</td>
+                        <td class="py-4 px-4 font-bold text-slate-800 tmo-edit-cell" data-idx="${i}" data-field="township" ${this.isEditingTMO ? editStyle : ''}>${tmo.township}</td>
+                        <td class="py-4 px-4 text-blue-600 tmo-edit-cell" data-idx="${i}" data-field="tsEmail" ${this.isEditingTMO ? editStyle : ''}>${tmo.tsEmail}</td>
+                        <td class="py-4 px-4 font-bold text-slate-700 tmo-edit-cell" data-idx="${i}" data-field="tmoName" ${this.isEditingTMO ? editStyle : ''}>${tmo.tmoName}</td>
+                        <td class="py-4 px-4 text-slate-600 tmo-edit-cell" data-idx="${i}" data-field="tmoEmail" ${this.isEditingTMO ? editStyle : ''}>${tmo.tmoEmail}</td>
+                        <td class="py-4 px-4 text-slate-700 font-medium tmo-edit-cell" data-idx="${i}" data-field="phone" ${this.isEditingTMO ? editStyle : ''}>${this.toMM(tmo.phone)}</td>
+                    </tr>`;
+                }).join('');
+            },
+            renderTable() {
+                const tbody = document.getElementById('employee-table-body'); if(!tbody) return;
+                // Security Check inside Render
+                if (!this.isAdmin) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold">Log in required</td></tr>`;
+                    return;
+                }
+
+                let filtered = this.employees.filter(emp => { const searchMatch = (emp.full_name||'').toLowerCase().includes(this.filters.search) || (emp.department||'').toLowerCase().includes(this.filters.search) || (emp.emp_id||'').toLowerCase().includes(this.filters.search); const distMatch = this.filters.dist ? emp.district === this.filters.dist : true, townMatch = this.filters.town ? emp.township === this.filters.town : true, hospMatch = this.filters.hosp ? emp.hospital === this.filters.hosp : true; return searchMatch && distMatch && townMatch && hospMatch; });
+                if (filtered.length === 0) { tbody.innerHTML = `<tr><td colSpan="6" class="px-6 py-24 text-center"><div class="flex flex-col items-center gap-4 text-slate-400"><i class="fa-solid fa-filter text-5xl opacity-20"></i><p class="font-bold text-lg">${t[this.lang].noData}</p></div></td></tr>`; return; }
+                tbody.innerHTML = filtered.map(emp => {
+                    const empStr = encodeURIComponent(JSON.stringify(emp)); let photoHtml = emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover shadow-sm border border-slate-200 shrink-0" />` : `<div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold text-sm shadow-inner shrink-0">${(emp.full_name||'A').charAt(0)}</div>`;
+                    return `<tr class="hover:bg-blue-50/40 transition-colors cursor-pointer group border-b border-slate-50 last:border-0" onclick="appState.openModal(JSON.parse(decodeURIComponent('${empStr}')))">
+                        <td class="px-4 py-4 text-xs md:text-sm text-slate-500 font-medium">${this.toMM(emp.emp_id)}</td>
+                        <td class="px-4 py-4"><div class="flex items-center gap-2 md:gap-3">${photoHtml}<span class="text-sm md:text-base font-bold text-slate-800 group-hover:text-blue-700 transition-colors">${emp.full_name}</span></div></td>
+                        <td class="px-4 py-4"><p class="text-sm md:text-base text-slate-700 font-bold">${emp.township || '-'}</p><p class="text-[10px] md:text-xs text-slate-400 font-medium">${emp.district || '-'}</p></td>
+                        <td class="px-4 py-4"><p class="text-sm md:text-base text-slate-700 font-bold">${emp.hospital || '-'}</p><p class="text-[10px] md:text-xs text-blue-500 font-medium">${emp.beds ? `(${this.toMM(emp.beds)} ခုတင်)` : '-'}</p></td>
+                        <td class="px-4 py-4"><p class="text-sm md:text-base text-slate-700 font-bold truncate max-w-[150px] md:max-w-[200px]">${emp.department}</p><p class="text-[10px] md:text-xs text-slate-400 font-medium truncate max-w-[150px] md:max-w-[200px]">${emp.designation}</p></td>
+                        <td class="px-4 py-4 text-center"><div class="inline-flex items-center justify-center p-2 text-blue-600 bg-blue-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"><i class="fa-solid fa-eye"></i></div></td>
+                    </tr>`;
+                }).join('');
+            },
+            renderHospitalsList() {
+                const container = document.getElementById('hospitals-list-container'); if(!container) return; let html = '';
+                for (const dist in locationData) {
+                    let townHtml = ''; let totalHospInDist = 0;
+                    for (const town in locationData[dist]) {
+                        const hosps = locationData[dist][town]; totalHospInDist += hosps.length;
+                        let hospItems = hosps.map(h => `<li class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"><span class="text-xs md:text-sm font-bold text-slate-700"><i class="fa-solid fa-caret-right text-indigo-300 mr-2"></i> ${h.name}</span> <span class="text-[10px] md:text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full whitespace-nowrap ml-2">${h.beds === '-' ? 'N/A' : this.toMM(h.beds) + ' ခုတင်'}</span></li>`).join('');
+                        townHtml += `<div class="mb-4"><h5 class="font-bold text-indigo-700 text-xs md:text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${town}</h5><ul class="bg-white rounded-xl border border-slate-100 p-2 shadow-sm">${hospItems}</ul></div>`;
+                    }
+                    html += `<div class="bg-slate-50 rounded-[1.5rem] p-4 md:p-6 border border-slate-200 shadow-sm"><div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-200"><h4 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-500"></i> ${dist}</h4><span class="bg-blue-100 text-blue-700 text-[10px] md:text-xs font-bold px-3 py-1 rounded-full">${this.toMM(totalHospInDist)} ရုံ</span></div>${townHtml}</div>`;
+                }
+                container.innerHTML = html;
+            },
+            renderHomeStats() {
+                const statDist = document.getElementById('stat-districts'), statTown = document.getElementById('stat-townships');
+                if(statDist) statDist.innerText = this.toMM(Object.keys(locationData).length);
+                if(statTown) { let towns = 0; for(let d in locationData) towns += Object.keys(locationData[d]).length; statTown.innerText = this.toMM(towns); }
+                const mapImgEl = document.getElementById('home-map-img'), mapZoomImgEl = document.getElementById('map-zoom-img'), defaultMap = "https://placehold.co/1200x600/e2e8f0/475569?text=Shan+State+Map";
+                if(this.homeData.mapImage) { if(mapImgEl) mapImgEl.src = this.homeData.mapImage; if(mapZoomImgEl) mapZoomImgEl.src = this.homeData.mapImage; } else { if(mapImgEl) mapImgEl.src = defaultMap; if(mapZoomImgEl) mapZoomImgEl.src = defaultMap; }
+                const hData = this.homeData.hospitals, tData = this.homeData.treatments, hospTitle = hData.title || t[this.lang].hospitalStatusTitle, treatTitle = tData.title || t[this.lang].treatmentStatsTitle;
+                const funcVal = parseInt(hData.funcTotal) || 0, closedVal = parseInt(hData.closedTotal) || 0, totalHosp = funcVal + closedVal;
+                const funcPercent = totalHosp > 0 ? ((funcVal / totalHosp) * 100).toFixed(1) : 0, closedPercent = totalHosp > 0 ? ((closedVal / totalHosp) * 100).toFixed(1) : 0;
+                const editStyle = 'contenteditable="true" style="background:#fef9c3; outline: 1px dashed #eab308; padding: 2px 4px; border-radius: 4px; min-width: 20px; display: inline-block;"';
+                let html = `
+                    <div class="mt-8 md:mt-12 pt-8 md:pt-10 border-t border-slate-200/60">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3"><span class="bg-teal-100 text-teal-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-building-circle-check"></i></span><span class="hosp-edit-cell" data-type="title" ${this.isEditingHosp ? editStyle : ''}>${hospTitle}</span></h3>
+                            <div class="flex flex-wrap gap-2 shrink-0 w-full lg:w-auto admin-only hidden">
+                                <button onclick="appState.toggleEditHosp()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 ${this.isEditingHosp ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="fa-solid ${this.isEditingHosp ? 'fa-save' : 'fa-pen'}"></i> <span class="inline">${this.isEditingHosp ? 'Save' : 'Edit'}</span></button>
+                                <button onclick="document.getElementById('importHomeFile').click()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="fa-solid fa-upload"></i> <span class="inline">Import</span></button>
+                                <button onclick="appState.exportHomeHosp()" class="flex-1 sm:flex-none justify-center w-full sm:w-auto mt-2 sm:mt-0 flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="fa-solid fa-download"></i> <span class="inline">Export</span></button>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                            <div class="overflow-x-auto custom-scrollbar-hide-mobile">
+                                <table class="w-full text-left text-sm whitespace-nowrap min-w-[700px]">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold"><tr><th colspan="2" class="py-4 px-4 md:px-6 border-b border-r border-slate-200 text-emerald-800 bg-emerald-50/50"><i class="fa-solid fa-circle-check mr-2"></i>လုပ်ငန်းဆောင်ရွက်နိုင်သောဆေးရုံများ</th><th colspan="2" class="py-4 px-4 md:px-6 border-b border-slate-200 text-red-800 bg-red-50/50"><i class="fa-solid fa-circle-xmark mr-2"></i>လုပ်ငန်းရပ်ဆိုင်းနေသော‌ဆေးရုံများ</th></tr><tr class="border-b border-slate-200 text-slate-500"><th class="py-3 px-4 md:px-6 border-r border-slate-100">ခုတင်အဆင့်</th><th class="py-3 px-4 md:px-6 text-right border-r border-slate-200">အရေအတွက်</th><th class="py-3 px-4 md:px-6 border-r border-slate-100">ခုတင်အဆင့်</th><th class="py-3 px-4 md:px-6 text-right">အရေအတွက်</th></tr></thead>
+                                    <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                                        ${hData.func.map((r, i) => { let c = hData.closed[i] || {name: '', val: ''}; return `<tr class="hover:bg-slate-50 transition-colors"><td class="py-4 px-4 md:px-6 border-r border-slate-100 font-bold text-slate-800 hosp-edit-cell" data-type="func-name" data-idx="${i}" ${this.isEditingHosp ? editStyle : ''}>${r.name}</td><td class="py-4 px-4 md:px-6 text-right font-bold text-emerald-600 border-r border-slate-200 hosp-edit-cell" data-type="func-val" data-idx="${i}" ${this.isEditingHosp ? editStyle : ''}>${r.val === '-' ? '-' : this.toMM(r.val)}</td><td class="py-4 px-4 md:px-6 border-r border-slate-100 font-bold text-slate-800 hosp-edit-cell" data-type="closed-name" data-idx="${i}" ${this.isEditingHosp ? editStyle : ''}>${c.name}</td><td class="py-4 px-4 md:px-6 text-right font-bold text-red-500 hosp-edit-cell" data-type="closed-val" data-idx="${i}" ${this.isEditingHosp ? editStyle : ''}>${c.val === '-' ? '-' : this.toMM(c.val)}</td></tr>`; }).join('')}
+                                    </tbody>
+                                    <tfoot class="bg-slate-50/50 border-t-2 border-slate-200 font-bold text-sm md:text-base"><tr><td class="py-4 px-4 md:px-6 border-r border-slate-100 text-slate-600">စုစုပေါင်း</td><td class="py-4 px-4 md:px-6 text-right text-emerald-700 border-r border-slate-200 hosp-edit-cell" data-type="func-total" ${this.isEditingHosp ? editStyle : ''}>${this.toMM(hData.funcTotal)}</td><td class="py-4 px-4 md:px-6 border-r border-slate-100 text-slate-600">စုစုပေါင်း</td><td class="py-4 px-4 md:px-6 text-right text-red-700 hosp-edit-cell" data-type="closed-total" ${this.isEditingHosp ? editStyle : ''}>${this.toMM(hData.closedTotal)}</td></tr></tfoot>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-8 bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center">
+                            <h4 class="font-bold text-slate-800 mb-6 text-base md:text-lg"><i class="fa-solid fa-chart-pie text-blue-500 mr-2"></i>ဆေးရုံဖွင့်လှစ်နိုင်မှု ရာခိုင်နှုန်းပြပုံ</h4><div class="relative w-56 h-56 md:w-72 md:h-72"><canvas id="hospPieChart"></canvas></div>
+                            <div class="mt-6 flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 text-xs md:text-sm font-bold w-full sm:w-auto"><span class="text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl sm:rounded-full border border-emerald-200 shadow-sm flex items-center justify-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> ဆောင်ရွက်နိုင်မှု (${this.toMM(funcPercent)}% - ${this.toMM(funcVal)} ရုံ)</span><span class="text-red-700 bg-red-50 px-4 py-2 rounded-xl sm:rounded-full border border-red-200 shadow-sm flex items-center justify-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> ရပ်ဆိုင်းမှု (${this.toMM(closedPercent)}% - ${this.toMM(closedVal)} ရုံ)</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 md:mt-12 pt-8 md:pt-10 border-t border-slate-200/60">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3"><span class="bg-orange-100 text-orange-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-notes-medical"></i></span><span class="treat-edit-cell" data-r="title" data-c="0" ${this.isEditingTreat ? editStyle : ''}>${treatTitle}</span></h3>
+                            <div class="flex flex-wrap gap-2 shrink-0 w-full lg:w-auto admin-only hidden">
+                                <button onclick="appState.toggleEditTreat()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 ${this.isEditingTreat ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="fa-solid ${this.isEditingTreat ? 'fa-save' : 'fa-pen'}"></i> <span class="inline">${this.isEditingTreat ? 'Save' : 'Edit'}</span></button>
+                                <button onclick="document.getElementById('importHomeFile').click()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="fa-solid fa-upload"></i> <span class="inline">Import</span></button>
+                                <button onclick="appState.exportHomeTreat()" class="flex-1 sm:flex-none justify-center w-full sm:w-auto mt-2 sm:mt-0 flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2.5 rounded-xl text-sm font-bold transition"><i class="fa-solid fa-download"></i> <span class="inline">Export</span></button>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                            <div class="overflow-x-auto custom-scrollbar-hide-mobile">
+                                <table class="w-full text-left text-sm whitespace-nowrap min-w-[800px]">
+                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold"><tr>${tData.headers.map((h,i) => `<th class="py-4 px-4 ${i===0?'md:px-6 border-r border-slate-100':(i===tData.headers.length-1?'md:px-6 text-right font-black bg-slate-50 border-l border-slate-200':'text-right text-blue-700 bg-blue-50/50')} treat-edit-cell" data-r="header" data-c="${i}" ${this.isEditingTreat ? editStyle : ''}>${h}</th>`).join('')}</tr></thead>
+                                    <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                                        ${tData.rows.map((r, rIdx) => {
+                                            if(r[1] === "" && r[2] === "") return `<tr class="bg-slate-100/50 border-y border-slate-200"><td colspan="${r.length}" class="py-2.5 px-4 md:px-6 font-bold text-slate-500 treat-edit-cell" data-r="${rIdx}" data-c="0" ${this.isEditingTreat ? editStyle : ''}>${r[0]}</td></tr>`;
+                                            return `<tr class="hover:bg-slate-50 transition-colors">${r.map((c,i) => { let isSub = i===0 && (c.includes('Major')||c.includes('Minor')), cleanText = c.replace('<i class="fa-solid fa-caret-right text-slate-300 mr-2"></i>','').trim(), displayVal = this.toMM(cleanText); return `<td class="py-4 px-4 ${i===0?'md:px-6 border-r border-slate-100 font-bold text-slate-800'+(isSub?' pl-8 md:pl-10':''):(i===r.length-1?'md:px-6 text-right font-bold text-blue-700 bg-slate-50/50 border-l border-slate-100':'text-right'+(c==='0'?' text-slate-400':''))} treat-edit-cell" data-r="${rIdx}" data-c="${i}" ${this.isEditingTreat ? editStyle : ''}>${isSub ? '<i class="fa-solid fa-caret-right text-slate-300 mr-2"></i>' : ''}${displayVal}</td>`; }).join('')}</tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const container = document.getElementById('dynamic-home-tables'); if (container) container.innerHTML = html;
+                setTimeout(() => {
+                    try {
+                        if(window.appState.hospChart) { window.appState.hospChart.destroy(); window.appState.hospChart = null; }
+                        const ctx = document.getElementById('hospPieChart');
+                        if(ctx && typeof Chart !== 'undefined' && totalHosp > 0) { window.appState.hospChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['ဆောင်ရွက်နိုင်သော ဆေးရုံများ', 'ရပ်ဆိုင်းနေသော ဆေးရုံများ'], datasets: [{ data: [funcVal, closedVal], backgroundColor: ['rgba(16, 185, 129, 0.85)', 'rgba(239, 68, 68, 0.85)'], borderColor: ['#ffffff', '#ffffff'], borderWidth: 4, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '60%', layout: { padding: 10 }, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', titleFont: { family: 'Pyidaungsu', size: 14 }, bodyFont: { family: 'Pyidaungsu', size: 15, weight: 'bold' }, padding: 12, cornerRadius: 8, displayColors: true, callbacks: { label: (context) => { let value = context.raw; let percentage = Math.round((value / totalHosp) * 100); return ' ' + this.toMM(value) + ' ရုံ (' + this.toMM(percentage) + '%)'; } } } } } }); }
+                    } catch(e) { console.error(e); }
+                }, 100);
+            }
+        };
+
+        // --- 6. Event Listeners ---
+        window.addEventListener('DOMContentLoaded', () => {
+            appState.initFilters(); 
+            appState.setView('home');
+            appState.initSupabase();
+
+            setTimeout(() => { 
+                const s=document.getElementById('view-splash');
+                const c=document.getElementById('main-app-container'); 
+                if(c) { c.classList.remove('hidden'); c.style.display='flex'; } 
+                if(s) { s.style.opacity='0'; setTimeout(()=>s.remove(), 500); } 
+            }, 1500);
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker Setup Complete'))
+                .catch(err => console.warn('Offline SW not registered'));
+            }
+        });
+    </script>
+</body>
+</html>

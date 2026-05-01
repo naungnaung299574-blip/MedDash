@@ -221,14 +221,14 @@
                                 <span data-i18n="documentsTitle">စာရွက်စာတမ်းများ</span>
                             </h3>
                             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto ml-0 lg:ml-auto">
-                                <input type="file" id="upload-doc-input" accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden" onchange="appState.uploadDocument(event)" />
-                                <button onclick="document.getElementById('upload-doc-input').click()" class="admin-only hidden w-full sm:w-auto justify-center flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="uploadFile">ဖိုင်တင်မည်</span>
+                                <input type="file" id="upload-doc-input" accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden" onchange="appState.processDocUpload(event)" />
+                                <button onclick="appState.promptAddCategory()" class="admin-only hidden w-full sm:w-auto justify-center flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm text-sm">
+                                    <i class="fa-solid fa-folder-plus"></i> <span data-i18n="addCategory">ကဏ္ဍအသစ်ထည့်မည်</span>
                                 </button>
                             </div>
                         </header>
-                        <div id="documents-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                            <!-- Documents will be rendered here -->
+                        <div id="documents-list-container" class="space-y-6">
+                            <!-- Categories and Documents will be rendered here -->
                         </div>
                     </div>
                 </div>
@@ -262,6 +262,7 @@
                     <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-users"></i></span><span data-i18n="employeeList">ဝန်ထမ်းအင်အားစာရင်း</span></h3>
                         <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto ml-0 lg:ml-auto">
+                            <!-- BULK DELETE BUTTON -->
                             <button onclick="appState.deleteSelectedEmployees()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-red-50 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl font-bold hover:bg-red-100 transition-all shadow-sm text-sm admin-only hidden"><i class="fa-solid fa-trash"></i> <span data-i18n="deleteSelected">ရွေးချယ်ထားသည်များကိုဖျက်မည်</span></button>
                             <button onclick="document.getElementById('importFile').click()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-all shadow-sm text-sm admin-only hidden"><i class="fa-solid fa-upload"></i> <span class="inline">Import</span></button>
                             <input type="file" id="importFile" accept=".csv" class="hidden" onchange="appState.importCSV(event)" />
@@ -523,7 +524,8 @@
                 settings:"ဆက်တင်များ",languageSetting:"ဘာသာစကားပြောင်းရန်",appVersion:"App ဗားရှင်း",tmoTitle:"TMO Contacts",
                 bedCapacity: "ခုတင်အဆင့်", totalCount: "စုစုပေါင်းအရေအတွက်", summaryTitle: "ဆေးရုံများအနှစ်ချုပ်ဇယား", bedsSuffix: "ခုတင်ဆံ့ဆေးရုံ",
                 deleteSelected: "ရွေးချယ်ထားသည်များကိုဖျက်မည်",
-                documentsTitle: "စာရွက်စာတမ်းများ", uploadFile: "ဖိုင်တင်မည်", download: "ဒေါင်းလုဒ်", noDocuments: "စာရွက်စာတမ်းများ မရှိသေးပါ"
+                documentsTitle: "စာရွက်စာတမ်းများ", uploadFile: "ဖိုင်တင်မည်", download: "ဒေါင်းလုဒ်", noDocuments: "စာရွက်စာတမ်းများ မရှိသေးပါ",
+                addCategory: "ကဏ္ဍအသစ်ထည့်မည်", categoryName: "ကဏ္ဍအမည်", rename: "အမည်ပြောင်းမည်", uncategorized: "အခြားစာရွက်စာတမ်းများ"
             },
             en:{
                 title:"MedDash",subtitle:"Shan State (South) Public Health Department",total:"Total Employees",searchPlaceholder:"Search...",addBtn:"Add Employee",
@@ -539,7 +541,8 @@
                 settings:"Settings",languageSetting:"Change Language",appVersion:"App Version",tmoTitle:"TMO Contacts",
                 bedCapacity: "Bed Capacity", totalCount: "Total Count", summaryTitle: "Hospital Summary Table", bedsSuffix: "-Bed Hospital",
                 deleteSelected: "Delete Selected",
-                documentsTitle: "Documents", uploadFile: "Upload File", download: "Download", noDocuments: "No documents available"
+                documentsTitle: "Documents", uploadFile: "Upload File", download: "Download", noDocuments: "No documents available",
+                addCategory: "Add Category", categoryName: "Category Name", rename: "Rename", uncategorized: "Uncategorized"
             }
         };
 
@@ -549,7 +552,9 @@
             employees: [],
             homeData: defaultHomeData, 
             tmoList: [],
+            docCategories: [],
             documentsList: [],
+            currentUploadCategoryId: null,
             activityLogs: [], menuOpen: false, previewImage: null, editingEmp: null, filters: { dist: '', town: '', hosp: '', search: '' }, isEditingHosp: false, isEditingTreat: false, isEditingTMO: false, hospChart: null, tmoSearchTerm: '', mapZoomLevel: 1, isDraggingMap: false, mapStartX: 0, mapStartY: 0, mapScrollLeft: 0, mapScrollTop: 0,
             
             toMM(str) { if(str===null||str===undefined)return''; return String(str).replace(/[0-9]/g, c=>engToMm[c]||c); },
@@ -558,6 +563,12 @@
                 let res=[], row=[], inQ=false, val='';
                 for(let i=0; i<text.length; i++){ let c=text[i]; if(c==='"' && text[i+1]==='"'){val+='"'; i++;} else if(c==='"') inQ=!inQ; else if(c===',' && !inQ){row.push(val); val='';} else if(c==='\n' && !inQ){row.push(val); val=''; res.push(row); row=[];} else if(c!=='\r') val+=c; }
                 row.push(val); res.push(row); return res.filter(r=>r.join('').trim()!=='');
+            },
+            generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
             },
             
             logActivity(action, details) {
@@ -587,7 +598,7 @@
 
             exportFullBackup() {
                 if (!this.isAdmin) return;
-                const backupData = { timestamp: new Date().toISOString(), version: "2.5 Pro Secured", employees: this.employees, tmoList: this.tmoList, homeData: this.homeData, activityLogs: this.activityLogs };
+                const backupData = { timestamp: new Date().toISOString(), version: "2.5 Pro Secured", employees: this.employees, tmoList: this.tmoList, homeData: this.homeData, docCategories: this.docCategories, documentsList: this.documentsList, activityLogs: this.activityLogs };
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
                 const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", `MedDash_Backup_${new Date().toISOString().split('T')[0]}.json`);
                 document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove();
@@ -718,6 +729,8 @@
                     if (homeState && !homeErr) {
                         this.homeData = homeState.homeData || defaultHomeData;
                         this.activityLogs = homeState.activityLogs || [];
+                        this.docCategories = homeState.docCategories || [];
+                        this.documentsList = homeState.documentsList || [];
                     }
                 } catch (e) {
                     console.error("Home state fetch error", e);
@@ -752,17 +765,27 @@
             async pushToCloud() {
                 if(!this.isAdmin) return;
                 try {
-                    await supabase.from('meddash_state').upsert({ id: 'main_doc', homeData: this.homeData, activityLogs: this.activityLogs });
+                    // meddash_state (Dashboard Data, Categories, Logs) ကိုသာ သိမ်းပါမည်
+                    const { error: stateError } = await supabase.from('meddash_state').upsert({ 
+                        id: 'main_doc', 
+                        homeData: this.homeData, 
+                        activityLogs: this.activityLogs,
+                        docCategories: this.docCategories,
+                        documentsList: this.documentsList
+                    });
+                    if(stateError) throw stateError;
 
-                    if (this.employees.length > 0) {
-                        await supabase.from('employees').upsert(this.employees);
-                    }
-                    if (this.tmoList.length > 0) {
-                        await supabase.from('tmo_contacts').upsert(this.tmoList);
-                    }
-                } catch(e) { console.error("Cloud Save Failed", e); }
+                    /* 
+                     * မှတ်ချက် - Employees နှင့် TMO Data များကို အောက်ပါအတိုင်း
+                     * Array လိုက် Bulk Upsert မလုပ်တော့ဘဲ သက်ဆိုင်ရာ Function များထဲတွင် 
+                     * Row-by-row Update ပြုလုပ်ရန် ပြင်ဆင်ထားပါသည်။
+                     */
+
+                } catch(e) { 
+                    console.error("Cloud Save Failed", e); 
+                    alert("Database Save Error: " + (e.message || "Unknown error during cloud sync."));
+                }
             },
-
             updateStatus(isActive) {
                 const bulb = document.getElementById('status-bulb'), text = document.getElementById('db-status-text'); if(!bulb || !text) return;
                 if (isActive) { bulb.className = "w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"; text.innerText = "Admin Cloud"; } 
@@ -799,31 +822,160 @@
             },
             async removeMapImage() { if(confirm("ဖျက်ရန် သေချာပါသလား?")) { this.homeData.mapImage = null; this.refreshUI(); this.logActivity('Map Removed', 'Deleted hospital map'); await this.pushToCloud(); } },
             
-            async toggleEditHosp() {
+           async toggleEditHosp() {
+                if (!this.isAdmin) return;
                 this.isEditingHosp = !this.isEditingHosp;
-                if (!this.isEditingHosp) {
-                    document.querySelectorAll('.hosp-edit-cell').forEach(cell => { const type = cell.getAttribute('data-type'), idx = cell.getAttribute('data-idx'), val = this.toEng(cell.innerText.trim()); if (type === 'func-name') this.homeData.hospitals.func[idx].name = cell.innerText.trim(); if (type === 'func-val') this.homeData.hospitals.func[idx].val = val; if (type === 'closed-name') this.homeData.hospitals.closed[idx].name = cell.innerText.trim(); if (type === 'closed-val') this.homeData.hospitals.closed[idx].val = val; if (type === 'title') this.homeData.hospitals.title = cell.innerText.trim(); });
-                    let fTotal = 0, cTotal = 0; this.homeData.hospitals.func.forEach(item => { let v = parseInt(item.val); if(!isNaN(v)) fTotal += v; }); this.homeData.hospitals.closed.forEach(item => { let v = parseInt(item.val); if(!isNaN(v)) cTotal += v; });
-                    this.homeData.hospitals.funcTotal = fTotal.toString(); this.homeData.hospitals.closedTotal = cTotal.toString(); this.renderHomeStats(); this.logActivity('Hospital Status Updated', 'Updated operational hospital counts'); await this.pushToCloud();
-                } else this.renderHomeStats();
+
+                if (this.isEditingHosp) {
+                    // ၁။ Edit Mode စဝင်ချိန်မှာ လက်ရှိ Data အဟောင်းကို Snapshot မှတ်ထားပါမည်
+                    this._originalHospSnapshot = JSON.parse(JSON.stringify(this.homeData.hospitals));
+                    this.renderHomeStats();
+                } else {
+                    // ၂။ DOM ကနေ ပြင်ဆင်ထားတဲ့ Data တွေကို ယူပါမည်
+                    document.querySelectorAll('.hosp-edit-cell').forEach(cell => { 
+                        const type = cell.getAttribute('data-type'), idx = cell.getAttribute('data-idx'), val = this.toEng(cell.innerText.trim()); 
+                        if (type === 'func-name') this.homeData.hospitals.func[idx].name = cell.innerText.trim(); 
+                        if (type === 'func-val') this.homeData.hospitals.func[idx].val = val; 
+                        if (type === 'closed-name') this.homeData.hospitals.closed[idx].name = cell.innerText.trim(); 
+                        if (type === 'closed-val') this.homeData.hospitals.closed[idx].val = val; 
+                        if (type === 'title') this.homeData.hospitals.title = cell.innerText.trim(); 
+                    });
+
+                    // ၃။ Total များကို ပြန်လည်တွက်ချက်ပါမည်
+                    let fTotal = 0, cTotal = 0; 
+                    this.homeData.hospitals.func.forEach(item => { let v = parseInt(item.val); if(!isNaN(v)) fTotal += v; }); 
+                    this.homeData.hospitals.closed.forEach(item => { let v = parseInt(item.val); if(!isNaN(v)) cTotal += v; });
+                    this.homeData.hospitals.funcTotal = fTotal.toString(); 
+                    this.homeData.hospitals.closedTotal = cTotal.toString();
+
+                    // ၄။ အရင် Data နဲ့ အသစ် Data တိုက်စစ်ပြီး "ပြောင်းလဲမှုရှိမှသာ" သိမ်းပါမည်
+                    if (JSON.stringify(this.homeData.hospitals) !== JSON.stringify(this._originalHospSnapshot)) {
+                        const loader = document.getElementById('global-loader');
+                        if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Updating Hospitals..."; }
+
+                        try {
+                            this.logActivity('Hospital Status Updated', 'Updated operational hospital counts');
+                            await this.pushToCloud();
+                            this.showToast('successUpdate');
+                        } catch(err) {
+                            console.error("Hospital Update Error", err);
+                            alert("Failed to update: " + err.message);
+                            // Error တက်ပါက Data ကို မူလအခြေအနေသို့ ပြန်ထားမည် (Rollback)
+                            this.homeData.hospitals = JSON.parse(JSON.stringify(this._originalHospSnapshot));
+                        } finally {
+                            if (loader) loader.classList.add('hidden');
+                        }
+                    }
+
+                    delete this._originalHospSnapshot;
+                    this.renderHomeStats();
+                }
             },
+
             async toggleEditTreat() {
+                if (!this.isAdmin) return;
                 this.isEditingTreat = !this.isEditingTreat;
-                if (!this.isEditingTreat) {
-                    document.querySelectorAll('.treat-edit-cell').forEach(cell => { const rIdx = cell.getAttribute('data-r'), cIdx = cell.getAttribute('data-c'), val = this.toEng(cell.innerText.trim()); if (rIdx === 'header') this.homeData.treatments.headers[cIdx] = cell.innerText.trim(); else if (rIdx === 'title') this.homeData.treatments.title = cell.innerText.trim(); else this.homeData.treatments.rows[rIdx][cIdx] = val; });
-                    this.renderHomeStats(); this.logActivity('Treatment Stats Updated', 'Updated monthly statistics'); await this.pushToCloud();
-                } else this.renderHomeStats();
+
+                if (this.isEditingTreat) {
+                    // ၁။ Edit Mode စဝင်ချိန်မှာ လက်ရှိ Data အဟောင်းကို Snapshot မှတ်ထားပါမည်
+                    this._originalTreatSnapshot = JSON.parse(JSON.stringify(this.homeData.treatments));
+                    this.renderHomeStats();
+                } else {
+                    // ၂။ DOM ကနေ ပြင်ဆင်ထားတဲ့ Data တွေကို ယူပါမည်
+                    document.querySelectorAll('.treat-edit-cell').forEach(cell => { 
+                        const rIdx = cell.getAttribute('data-r'), cIdx = cell.getAttribute('data-c'), val = this.toEng(cell.innerText.trim()); 
+                        if (rIdx === 'header') this.homeData.treatments.headers[cIdx] = cell.innerText.trim(); 
+                        else if (rIdx === 'title') this.homeData.treatments.title = cell.innerText.trim(); 
+                        else this.homeData.treatments.rows[rIdx][cIdx] = val; 
+                    });
+
+                    // ၃။ အရင် Data နဲ့ အသစ် Data တိုက်စစ်ပြီး "ပြောင်းလဲမှုရှိမှသာ" သိမ်းပါမည်
+                    if (JSON.stringify(this.homeData.treatments) !== JSON.stringify(this._originalTreatSnapshot)) {
+                        const loader = document.getElementById('global-loader');
+                        if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Updating Treatments..."; }
+
+                        try {
+                            this.logActivity('Treatment Stats Updated', 'Updated monthly statistics'); 
+                            await this.pushToCloud();
+                            this.showToast('successUpdate');
+                        } catch(err) {
+                            console.error("Treatment Update Error", err);
+                            alert("Failed to update: " + err.message);
+                            // Error တက်ပါက Data ကို မူလအခြေအနေသို့ ပြန်ထားမည် (Rollback)
+                            this.homeData.treatments = JSON.parse(JSON.stringify(this._originalTreatSnapshot));
+                        } finally {
+                            if (loader) loader.classList.add('hidden');
+                        }
+                    }
+
+                    delete this._originalTreatSnapshot;
+                    this.renderHomeStats();
+                }
             },
-            
+             
             updateTMOFilters() { this.tmoSearchTerm = document.getElementById('tmoSearchInput').value.toLowerCase(); this.renderTMOTable(); },
             async toggleEditTMO() {
+                if (!this.isAdmin) return;
+                
                 this.isEditingTMO = !this.isEditingTMO;
-                if (!this.isEditingTMO) {
-                    document.querySelectorAll('.tmo-edit-cell').forEach(cell => { const rIdx = cell.getAttribute('data-idx'), field = cell.getAttribute('data-field'), val = cell.innerText.trim(); if(this.tmoList[rIdx]) { if (field === 'no' || field === 'phone') this.tmoList[rIdx][field] = this.toEng(val); else this.tmoList[rIdx][field] = val; } });
-                    this.renderTMOTable(); this.logActivity('TMO List Updated', 'Edited TMO contact table manually'); await this.pushToCloud();
-                } else this.renderTMOTable();
+                
+                if (this.isEditingTMO) {
+                    // ၁။ Edit Mode စဝင်ချိန်မှာ လက်ရှိ Data အဟောင်းကို Snapshot မှတ်ထားပါမည်
+                    this._originalTmoSnapshot = JSON.parse(JSON.stringify(this.tmoList));
+                    this.renderTMOTable(); 
+                } else {
+                    // ၂။ Save နှိပ်ချိန် - DOM ကနေ ပြင်ဆင်ထားတဲ့ Data တွေကို ယူပါမည်
+                    document.querySelectorAll('.tmo-edit-cell').forEach(cell => { 
+                        const rIdx = cell.getAttribute('data-idx');
+                        const field = cell.getAttribute('data-field');
+                        const val = cell.innerText.trim(); 
+                        
+                        if(this.tmoList[rIdx]) { 
+                            if (field === 'no' || field === 'phone') {
+                                this.tmoList[rIdx][field] = this.toEng(val); 
+                            } else {
+                                this.tmoList[rIdx][field] = val; 
+                            }
+                        } 
+                    });
+
+                    // ၃။ အရင် Data နဲ့ အသစ် Data ကို တိုက်စစ်ပြီး "ပြောင်းလဲသွားသော Row များ" ကိုပဲ ရွေးထုတ်ပါမည်
+                    const changedRows = [];
+                    this.tmoList.forEach((currentRow, idx) => {
+                        const originalRow = this._originalTmoSnapshot[idx];
+                        // Data ပြောင်းလဲမှုရှိမှသာ Array ထဲ ထည့်ပါမည်
+                        if (JSON.stringify(currentRow) !== JSON.stringify(originalRow)) {
+                            changedRows.push(currentRow);
+                        }
+                    });
+
+                    // ၄။ ပြောင်းလဲသွားတဲ့ Row တွေရှိမှသာ Supabase သို့ Targeted Upsert လုပ်ပါမည်
+                    if (changedRows.length > 0) {
+                        const loader = document.getElementById('global-loader');
+                        if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Updating TMO Contacts..."; }
+                        
+                        try {
+                            // ပြောင်းလဲသွားသော Row အနည်းငယ်ကိုသာ Database သို့ လှမ်းပို့မည်
+                            const { error } = await supabase.from('tmo_contacts').upsert(changedRows);
+                            if (error) throw error;
+
+                            this.logActivity('TMO List Updated', `Edited ${changedRows.length} TMO contacts`); 
+                            this.showToast('successUpdate');
+                        } catch(err) {
+                            console.error("TMO Update Error", err);
+                            alert("Failed to update TMO: " + err.message);
+                            // Error တက်ပါက Data ကို မူလအခြေအနေသို့ ပြန်ထားမည်
+                            this.tmoList = JSON.parse(JSON.stringify(this._originalTmoSnapshot));
+                        } finally {
+                            if (loader) loader.classList.add('hidden');
+                        }
+                    }
+                    
+                    // Memory ရှင်းလင်းခြင်းနှင့် Table ပြန်ဆွဲခြင်း
+                    delete this._originalTmoSnapshot;
+                    this.renderTMOTable();
+                }
             },
-            
             refreshUI() { 
                 this.renderTable(); 
                 this.renderHomeStats(); 
@@ -897,38 +1049,83 @@
             updateModalTownships() { const dSel = document.getElementById('inp-district'); if(dSel) this.populateModalDropdowns(dSel.value, null, null); },
             updateModalHospitals() { const dSel = document.getElementById('inp-district'); const tSel = document.getElementById('inp-township'); if(dSel && tSel) this.populateModalDropdowns(dSel.value, tSel.value, null); },
             
-            async saveEmployee(e) {
+           async saveEmployee(e) {
                 e.preventDefault(); if(!this.isAdmin) return; 
-                const id = document.getElementById('emp-id').value, dist = document.getElementById('inp-district').value, town = document.getElementById('inp-township').value, hosp = document.getElementById('inp-hospital').value, bedsObj = locationData[dist]?.[town]?.find(x => x.name === hosp);
-                const data = { full_name: document.getElementById('inp-name').value, department: document.getElementById('inp-dept').value, designation: document.getElementById('inp-pos').value, district: dist, township: town, hospital: hosp, beds: bedsObj ? bedsObj.beds : '', phone: this.toEng(document.getElementById('inp-phone').value), email: document.getElementById('inp-email').value, photo: this.previewImage || "" };
-                if (id) { 
-                    const index = this.employees.findIndex(emp => emp.id === id); 
-                    if (index !== -1) { 
-                        this.employees[index] = { ...this.employees[index], ...data }; 
-                        this.refreshUI(); 
+                const id = document.getElementById('emp-id').value;
+                const dist = document.getElementById('inp-district').value;
+                const town = document.getElementById('inp-township').value;
+                const hosp = document.getElementById('inp-hospital').value;
+                const bedsObj = locationData[dist]?.[town]?.find(x => x.name === hosp);
+                
+                const data = { 
+                    full_name: document.getElementById('inp-name').value, 
+                    department: document.getElementById('inp-dept').value, 
+                    designation: document.getElementById('inp-pos').value, 
+                    district: dist, township: town, hospital: hosp, 
+                    beds: bedsObj ? bedsObj.beds : '', 
+                    phone: this.toEng(document.getElementById('inp-phone').value), 
+                    email: document.getElementById('inp-email').value, 
+                    photo: this.previewImage || "" 
+                };
+                
+                const loader = document.getElementById('global-loader');
+                if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Saving..."; }
+
+                try {
+                    if (id) { 
+                        // ၁။ ဝန်ထမ်းအဟောင်း ပြင်ဆင်ခြင်း (Targeted Row Update)
+                        const { error } = await supabase.from('employees')
+                            .update(data)
+                            .eq('id', id);
+                        
+                        if (error) throw error;
+
+                        // Local Array ကို Update လုပ်ခြင်း
+                        const index = this.employees.findIndex(emp => emp.id === id); 
+                        if (index !== -1) { 
+                            this.employees[index] = { ...this.employees[index], ...data }; 
+                        } 
+                        
                         this.logActivity('Employee Updated', data.full_name);
-                        await this.pushToCloud(); 
                         this.showToast('successUpdate'); 
                     } 
-                } 
-                else { 
-                    data.id = Date.now().toString() + Math.floor(Math.random() * 1000); 
-                    data.emp_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`; 
-                    data.join_date = new Date().toISOString().split('T')[0]; 
-                    data.status = "Active"; 
-                    data.created_at = new Date().toISOString(); 
-                    this.employees.push(data); 
-                    this.refreshUI(); 
-                    this.logActivity('Employee Added', data.full_name);
+                    else { 
+                        // ၂။ ဝန်ထမ်းအသစ် ထည့်သွင်းခြင်း (Targeted Row Insert)
+                        data.id = this.generateUUID(); 
+                        data.emp_id = `EMP-${Math.floor(1000 + Math.random() * 9000)}`; 
+                        data.join_date = new Date().toISOString().split('T')[0]; 
+                        data.status = "Active"; 
+                        data.created_at = new Date().toISOString(); 
+                        
+                        const { error } = await supabase.from('employees').insert([data]);
+                        if (error) throw error;
+
+                        // Local Array သို့ ထည့်ခြင်း
+                        this.employees.push(data); 
+                        
+                        this.logActivity('Employee Added', data.full_name);
+                        this.showToast('successAdd'); 
+                    }
+
+                    // Activity Log အသစ်ဝင်သွားတဲ့အတွက် pushToCloud ကိုခေါ်ပါမည်
                     await this.pushToCloud(); 
-                    this.showToast('successAdd'); 
+                    this.refreshUI(); 
+                    this.closeModal();
+                    
+                } catch (err) {
+                    console.error("Save Employee Error", err);
+                    alert("Failed to save employee: " + (err.message || "Unknown Error"));
+                } finally {
+                    if (loader) loader.classList.add('hidden');
                 }
-                this.closeModal();
             },
             
            async deleteCurrent() { 
                 if (!this.editingEmp || !this.isAdmin) return; 
                 if (confirm("ဖျက်ရန် သေချာပါသလား?")) { 
+                    const loader = document.getElementById('global-loader');
+                    if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Deleting..."; }
+                    
                     try {
                         const deletedName = this.editingEmp.full_name; 
                         
@@ -936,14 +1133,16 @@
                         if (error) throw error;
 
                         this.employees = this.employees.filter(emp => emp.id !== this.editingEmp.id); 
-                        this.refreshUI(); 
+                        
                         this.logActivity('Employee Deleted', deletedName); 
-                        await this.pushToCloud(); 
+                        this.refreshUI(); 
                         this.showToast('successDelete'); 
                         this.closeModal(); 
                     } catch(err) {
                         console.error("Delete failed", err);
-                        alert("ဖျက်ရာတွင် အခက်အခဲရှိပါသည်။");
+                        alert("Delete failed: " + (err.message || "Check network and permissions."));
+                    } finally {
+                        if (loader) loader.classList.add('hidden');
                     }
                 } 
             },
@@ -961,6 +1160,9 @@
                     return;
                 }
                 if (confirm(`ရွေးချယ်ထားသော ဝန်ထမ်း ${this.toMM(checkedBoxes.length)} ဦးကို ဖျက်ရန် သေချာပါသလား?`)) {
+                    const loader = document.getElementById('global-loader');
+                    if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Deleting multiple..."; }
+                    
                     try {
                         const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
                         
@@ -973,7 +1175,144 @@
                         this.showToast('successDelete');
                     } catch(err) {
                         console.error("Bulk delete failed", err);
-                        alert("ဖျက်ရာတွင် အခက်အခဲရှိပါသည်။");
+                        alert("Bulk Delete Failed: " + (err.message || "Unknown error"));
+                    } finally {
+                        if (loader) loader.classList.add('hidden');
+                    }
+                }
+            },
+
+            promptAddCategory() {
+                const name = prompt(t[this.lang].categoryName || "Category Name:");
+                if (name && name.trim()) {
+                    const id = 'cat_' + Date.now();
+                    this.docCategories.push({ id, name: name.trim() });
+                    const loader = document.getElementById('global-loader');
+                    if (loader) loader.classList.remove('hidden');
+                    this.pushToCloud().then(() => {
+                        this.renderDocumentsList();
+                        this.logActivity('Category Added', name);
+                        this.showToast('successUpdate');
+                    }).catch(err => {
+                        console.error("Category save error", err);
+                        alert("Category save failed: " + err.message);
+                    }).finally(() => { if (loader) loader.classList.add('hidden'); });
+                }
+            },
+            editCategory(id) {
+                const cat = this.docCategories.find(c => c.id === id);
+                if(!cat) return;
+                const name = prompt(t[this.lang].rename || "New Name:", cat.name);
+                if (name && name.trim()) {
+                    cat.name = name.trim();
+                    const loader = document.getElementById('global-loader');
+                    if (loader) loader.classList.remove('hidden');
+                    this.pushToCloud().then(() => {
+                        this.renderDocumentsList();
+                        this.showToast('successUpdate');
+                    }).catch(err => {
+                        console.error("Category update error", err);
+                        alert("Category update failed: " + err.message);
+                    }).finally(() => { if (loader) loader.classList.add('hidden'); });
+                }
+            },
+            deleteCategory(id) {
+                if(confirm("Are you sure? Files inside will become uncategorized.")) {
+                    this.docCategories = this.docCategories.filter(c => c.id !== id);
+                    this.documentsList.forEach(d => { if(d.category_id === id) d.category_id = null; });
+                    const loader = document.getElementById('global-loader');
+                    if (loader) loader.classList.remove('hidden');
+                    this.pushToCloud().then(() => {
+                        this.renderDocumentsList();
+                        this.showToast('successDelete');
+                    }).catch(err => {
+                        console.error("Category delete error", err);
+                        alert("Category delete failed: " + err.message);
+                    }).finally(() => { if (loader) loader.classList.add('hidden'); });
+                }
+            },
+            triggerUpload(categoryId) {
+                this.currentUploadCategoryId = categoryId === 'uncategorized' ? null : categoryId;
+                document.getElementById('upload-doc-input').click();
+            },
+            async processDocUpload(e) {
+                if (!this.isAdmin) return;
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const loader = document.getElementById('global-loader');
+                if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Uploading..."; }
+
+                try {
+                    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                    
+                    const { data: uploadData, error } = await supabase.storage.from('meddash-files').upload(fileName, file, { upsert: false });
+                    if (error) throw error;
+                    
+                    const { data: urlData } = supabase.storage.from('meddash-files').getPublicUrl(fileName);
+                    
+                    const newDoc = {
+                        id: 'doc_' + Date.now(),
+                        storage_path: fileName,
+                        display_name: file.name,
+                        category_id: this.currentUploadCategoryId,
+                        public_url: urlData.publicUrl,
+                        created_at: new Date().toISOString()
+                    };
+
+                    this.documentsList.push(newDoc);
+                    await this.pushToCloud();
+                    this.renderDocumentsList();
+                    this.logActivity('Document Upload', `Uploaded ${file.name}`);
+                    this.showToast('successUpdate');
+                } catch (err) {
+                    console.error("Upload error", err);
+                    alert("Upload failed: " + (err.message || "Check storage permissions."));
+                } finally {
+                    if (loader) loader.classList.add('hidden');
+                    e.target.value = null; 
+                }
+            },
+            async renameDocument(id) {
+                const doc = this.documentsList.find(d => d.id === id);
+                if(!doc) return;
+                const newName = prompt(t[this.lang].rename || "Rename File:", doc.display_name);
+                if(newName && newName.trim()) {
+                    doc.display_name = newName.trim();
+                    const loader = document.getElementById('global-loader');
+                    if (loader) loader.classList.remove('hidden');
+                    try {
+                        await this.pushToCloud();
+                        this.renderDocumentsList();
+                        this.showToast('successUpdate');
+                    } catch(err) {
+                        console.error("Rename failed", err);
+                        alert("Rename failed: " + (err.message || "Unknown error"));
+                    } finally {
+                        if (loader) loader.classList.add('hidden');
+                    }
+                }
+            },
+            async deleteDocument(id, storagePath) {
+                if (!this.isAdmin) return;
+                if (confirm("ဖျက်ရန် သေချာပါသလား?")) {
+                    const loader = document.getElementById('global-loader');
+                    if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Deleting..."; }
+                    
+                    try {
+                        const { error } = await supabase.storage.from('meddash-files').remove([storagePath]);
+                        if (error) throw error;
+                        
+                        this.documentsList = this.documentsList.filter(f => f.id !== id);
+                        await this.pushToCloud();
+                        this.renderDocumentsList();
+                        this.logActivity('Document Delete', `Deleted file`);
+                        this.showToast('successDelete');
+                    } catch (err) {
+                        console.error("Delete error", err);
+                        alert("Delete failed: " + (err.message || "Unknown storage error"));
+                    } finally {
+                        if (loader) loader.classList.add('hidden');
                     }
                 }
             },
@@ -982,62 +1321,100 @@
                 const container = document.getElementById('documents-list-container');
                 if (!container) return;
 
-                if (this.documentsList.length === 0) {
-                    container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold"><i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i><p data-i18n="noDocuments">${t[this.lang].noDocuments}</p></div>`;
-                    return;
-                }
-
-                container.innerHTML = this.documentsList.map(doc => {
-                    const url = this.getDownloadUrl(doc.name);
-                    const isPdf = doc.name.toLowerCase().endsWith('.pdf');
-                    const isExcel = doc.name.toLowerCase().includes('.xls');
-                    const isWord = doc.name.toLowerCase().includes('.doc');
-                    
-                    let iconClass = "fa-file";
-                    let iconColor = "text-slate-500 bg-slate-100";
-                    if (isPdf) { iconClass = "fa-file-pdf"; iconColor = "text-red-600 bg-red-50"; }
-                    else if (isExcel) { iconClass = "fa-file-excel"; iconColor = "text-emerald-600 bg-emerald-50"; }
-                    else if (isWord) { iconClass = "fa-file-word"; iconColor = "text-blue-600 bg-blue-50"; }
-                    
-                    const fileSize = doc.metadata?.size ? (doc.metadata.size / 1024 / 1024).toFixed(2) + " MB" : "Unknown";
-                    const displayDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString() : "";
-
-                    return `
-                        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow group">
-                            <div class="flex items-start gap-3 mb-4">
-                                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconColor}">
-                                    <i class="fa-solid ${iconClass} text-2xl"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h5 class="font-bold text-slate-800 text-sm truncate" title="${doc.name}">${doc.name}</h5>
-                                    <p class="text-[10px] md:text-xs text-slate-400 mt-1 font-medium">${fileSize} • ${displayDate}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 border-t border-slate-100 pt-3 mt-auto">
-                                <a href="${url}" target="_blank" class="flex-1 text-center bg-slate-50 hover:bg-blue-50 text-blue-600 font-bold py-2 rounded-xl transition-colors text-xs flex justify-center items-center gap-2">
-                                    <i class="fa-solid fa-download"></i> <span data-i18n="download">${t[this.lang].download}</span>
-                                </a>
-                                <button onclick="appState.deleteDocument('${doc.name}')" class="admin-only hidden w-10 h-10 flex items-center justify-center bg-white border border-slate-200 hover:border-red-200 hover:bg-red-50 text-red-500 rounded-xl transition-colors shrink-0" title="Delete">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                let html = '';
                 
-                // Re-apply admin visibility logic specifically for the dynamically generated buttons
-                if(this.isAdmin) {
-                    document.querySelectorAll('#documents-list-container .admin-only').forEach(el => el.classList.remove('hidden'));
+                const uncategorized = { id: 'uncategorized', name: t[this.lang].uncategorized || "Uncategorized" };
+                const allCats = [...this.docCategories, uncategorized];
+
+                allCats.forEach(cat => {
+                    const catDocs = this.documentsList.filter(d => (cat.id === 'uncategorized' && !d.category_id) || d.category_id === cat.id);
+                    
+                    if (cat.id === 'uncategorized' && catDocs.length === 0 && !this.isAdmin) return;
+
+                    const isAdminClass = this.isAdmin ? '' : 'hidden';
+
+                    let docsHtml = '';
+                    if (catDocs.length === 0) {
+                        docsHtml = `<p class="text-sm text-slate-400 font-medium py-4 text-center italic" data-i18n="noDocuments">${t[this.lang].noDocuments}</p>`;
+                    } else {
+                        docsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">` + catDocs.map(doc => {
+                            const isPdf = doc.display_name.toLowerCase().endsWith('.pdf');
+                            const isExcel = doc.display_name.toLowerCase().includes('.xls');
+                            const isWord = doc.display_name.toLowerCase().includes('.doc');
+                            let iconClass = "fa-file"; let iconColor = "text-slate-500 bg-slate-100";
+                            if (isPdf) { iconClass = "fa-file-pdf"; iconColor = "text-red-600 bg-red-50"; }
+                            else if (isExcel) { iconClass = "fa-file-excel"; iconColor = "text-emerald-600 bg-emerald-50"; }
+                            else if (isWord) { iconClass = "fa-file-word"; iconColor = "text-blue-600 bg-blue-50"; }
+
+                            return `
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow group">
+                                <div class="flex items-start gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconColor}">
+                                        <i class="fa-solid ${iconClass} text-xl"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h5 class="font-bold text-slate-800 text-sm truncate" title="${doc.display_name}">${doc.display_name}</h5>
+                                        <p class="text-[10px] md:text-xs text-slate-400 mt-1 font-medium">${new Date(doc.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 border-t border-slate-100 pt-3 mt-auto">
+                                    <a href="${doc.public_url}" target="_blank" class="flex-1 text-center bg-slate-50 hover:bg-blue-50 text-blue-600 font-bold py-2 rounded-xl transition-colors text-xs flex justify-center items-center gap-2">
+                                        <i class="fa-solid fa-download"></i> <span data-i18n="download">${t[this.lang].download}</span>
+                                    </a>
+                                    <button onclick="appState.renameDocument('${doc.id}')" class="admin-only ${isAdminClass} w-9 h-9 flex items-center justify-center bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl transition-colors shrink-0" title="Rename">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button onclick="appState.deleteDocument('${doc.id}', '${doc.storage_path}')" class="admin-only ${isAdminClass} w-9 h-9 flex items-center justify-center bg-white border border-slate-200 hover:border-red-200 hover:bg-red-50 text-red-500 rounded-xl transition-colors shrink-0" title="Delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>`;
+                        }).join('') + `</div>`;
+                    }
+
+                    let catActions = '';
+                    if (cat.id !== 'uncategorized') {
+                        catActions = `
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity admin-only ${isAdminClass}">
+                                <button onclick="appState.triggerUpload('${cat.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg text-xs" title="Upload"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                                <button onclick="appState.editCategory('${cat.id}')" class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg text-xs" title="Edit Category"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="appState.deleteCategory('${cat.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg text-xs" title="Delete Category"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        `;
+                    } else if (this.isAdmin) {
+                        catActions = `
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity admin-only ${isAdminClass}">
+                                <button onclick="appState.triggerUpload('${cat.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg text-xs" title="Upload"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                    <div class="bg-slate-50 rounded-2xl p-4 md:p-6 border border-slate-200 group">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <h4 class="text-base font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-folder text-blue-400"></i> ${cat.name}</h4>
+                            ${catActions}
+                        </div>
+                        ${docsHtml}
+                    </div>`;
+                });
+
+                if (allCats.length === 1 && this.documentsList.length === 0) {
+                     html = `<div class="col-span-full py-12 text-center text-slate-400 font-bold"><i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i><p data-i18n="noDocuments">${t[this.lang].noDocuments}</p></div>`;
                 }
+
+                container.innerHTML = html;
             },
 
             triggerDownload(filename, csvContent) { const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); },
+            
             exportCSV() {
                 const headers = ['ID', 'Name', 'Department', 'Position', 'District', 'Township', 'Hospital', 'Beds', 'Phone', 'Email', 'Join Date', 'Status']; const ws_data = [headers];
                 this.employees.forEach(emp => { ws_data.push([ emp.emp_id, emp.full_name, emp.department, emp.designation, emp.district||'', emp.township||'', emp.hospital||'', emp.beds||'', emp.phone, emp.email||'', emp.join_date, emp.status ]); });
                 const csvContent = '\uFEFF' + ws_data.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
                 this.triggerDownload('Employee_List.csv', csvContent); this.showToast('successExport');
             },
+            
             exportHomeHosp() {
                 const hd = this.homeData.hospitals, ws_data = [ [hd.title], ["လုပ်ငန်းဆောင်ရွက်နိုင်သောဆေးရုံများ", "", "လုပ်ငန်းရပ်ဆိုင်းနေသော‌ဆေးရုံများ", ""], ["ခုတင်အဆင့်", "အရေအတွက်", "ခုတင်အဆင့်", "အရေအတွက်"] ]; const maxRows = Math.max(hd.func.length, hd.closed.length);
                 for(let i=0; i<maxRows; i++) { let f = hd.func[i] || {name: "", val: ""}; let c = hd.closed[i] || {name: "", val: ""}; ws_data.push([f.name, f.val, c.name, c.val]); }
@@ -1045,8 +1422,11 @@
                 const csvContent = '\uFEFF' + ws_data.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
                 this.triggerDownload('Hospital_Status.csv', csvContent);
             },
+            
             exportHomeTreat() { const td = this.homeData.treatments, ws_data = [[td.title], td.headers, ...td.rows]; const csvContent = '\uFEFF' + ws_data.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n'); this.triggerDownload('Treatment_Stats.csv', csvContent); },
+            
             exportTMOCSV() { const headers = ['စဉ်', 'မြို့နယ်', 'မြို့နယ် Email လိပ်စာ', 'TMO အမည်', 'TMO Email လိပ်စာ', 'ဖုန်းနံပါတ်'], rows = this.tmoList.map(t => [t.no, t.township, t.tsEmail, t.tmoName, t.tmoEmail, t.phone]); const csvContent = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n'); this.triggerDownload('TMO_Contact_List.csv', csvContent); this.showToast('successExport'); },
+            
             mapLocationName(input, type, parentVal = null) {
                 if(!input) return ''; const normalized = input.trim().toLowerCase().replace(/\s+/g, '');
                 if (type === 'district') { for(const key of Object.keys(locationData)) { const cleanKey = key.toLowerCase().replace(/\s+/g, ''), shortKey = cleanKey.replace(/\(.+\)/,''); if(cleanKey.includes(normalized) || normalized.includes(shortKey)) return key; } } 
@@ -1054,8 +1434,13 @@
                 else if (type === 'hospital' && parentVal && locationData[parentVal.dist]?.[parentVal.town]) { for(const h of locationData[parentVal.dist][parentVal.town]) { const cleanKey = h.name.toLowerCase().replace(/\s+/g, ''); if(cleanKey.includes(normalized) || normalized.includes(cleanKey)) return h.name; } }
                 return input.trim();
             },
-            importCSV(e) {
-                const file = e.target.files[0]; if (!file || !this.isAdmin) return; const loader = document.getElementById('global-loader'); if(loader) loader.classList.remove('hidden'); const reader = new FileReader();
+
+            async importCSV(e) {
+                const file = e.target.files[0]; if (!file || !this.isAdmin) return; 
+                const loader = document.getElementById('global-loader'); 
+                if(loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Importing Data..."; }
+                
+                const reader = new FileReader();
                 reader.onload = async (event) => {
                     try {
                         const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text);
@@ -1066,22 +1451,57 @@
                                 if (row['Name'] || row['အမည်']) {
                                     const rawDist = row['District'] || row['ခရိုင်'] || '', rawTown = row['Township'] || row['မြို့နယ်'] || '', rawHosp = row['Hospital'] || row['ဆေးရုံ'] || '';
                                     const smartDist = this.mapLocationName(rawDist, 'district'), smartTown = this.mapLocationName(rawTown, 'township', smartDist), smartHosp = this.mapLocationName(rawHosp, 'hospital', {dist: smartDist, town: smartTown}), bedsObj = locationData[smartDist]?.[smartTown]?.find(x => x.name === smartHosp);
-                                    let emp = { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), emp_id: row['ID'] || row['အမှတ်စဉ်'] || `EMP-${Math.floor(1000 + Math.random() * 9000)}`, full_name: row['Name'] || row['အမည်'] || '', department: row['Department'] || row['ဌာန'] || '', designation: row['Position'] || row['ရာထူး'] || '', district: smartDist, township: smartTown, hospital: smartHosp, beds: bedsObj ? bedsObj.beds : (row['Beds'] || row['ခုတင်အရေအတွက်'] || ''), phone: this.toEng(row['Phone'] || row['ဖုန်းနံပါတ်'] || row['ဖုန်း'] || ''), email: row['Email'] || row['အီးမေးလ်'] || '', join_date: row['Join Date'] || new Date().toISOString().split('T')[0], status: row['Status'] || 'Active', photo: "", created_at: new Date().toISOString() };
+                                    
+                                    // Generate a robust UUID for new imported records to prevent upsert primary key conflicts
+                                    let emp = { 
+                                        id: this.generateUUID(), 
+                                        emp_id: row['ID'] || row['အမှတ်စဉ်'] || `EMP-${Math.floor(1000 + Math.random() * 9000)}`, 
+                                        full_name: row['Name'] || row['အမည်'] || '', 
+                                        department: row['Department'] || row['ဌာန'] || '', 
+                                        designation: row['Position'] || row['ရာထူး'] || '', 
+                                        district: smartDist, township: smartTown, hospital: smartHosp, 
+                                        beds: bedsObj ? bedsObj.beds : (row['Beds'] || row['ခုတင်အရေအတွက်'] || ''), 
+                                        phone: this.toEng(row['Phone'] || row['ဖုန်းနံပါတ်'] || row['ဖုန်း'] || ''), 
+                                        email: row['Email'] || row['အီးမေးလ်'] || '', 
+                                        join_date: row['Join Date'] || new Date().toISOString().split('T')[0], 
+                                        status: row['Status'] || 'Active', 
+                                        photo: "", 
+                                        created_at: new Date().toISOString() 
+                                    };
                                     this.employees.push(emp); importedCount++;
                                 }
                             }
-                            if (importedCount > 0) { this.renderTable(); this.logActivity('Data Import', `Imported ${importedCount} employee records`); await this.pushToCloud(); this.showToast('successImport'); } else alert("ဒေတာများ မတွေ့ရှိပါ။");
+                            if (importedCount > 0) { 
+                                await this.pushToCloud(); // Await the save
+                                this.renderTable(); 
+                                this.logActivity('Data Import', `Imported ${importedCount} employee records`); 
+                                this.showToast('successImport'); 
+                            } else {
+                                alert("ဒေတာများ မတွေ့ရှိပါ။");
+                            }
                         }
-                    } catch(err) { alert("Error."); console.error(err); }
-                    if(loader) loader.classList.add('hidden'); e.target.value = null;
+                    } catch(err) { 
+                        console.error("Import Error:", err);
+                        alert("Import Failed: " + (err.message || "There was a problem processing the CSV file."));
+                    } finally {
+                        if(loader) loader.classList.add('hidden'); 
+                        e.target.value = null;
+                    }
                 };
                 reader.readAsText(file);
             },
-            importHomeCSV(e) {
-                const file = e.target.files[0]; if (!file || !this.isAdmin) return; const loader = document.getElementById('global-loader'); if(loader) loader.classList.remove('hidden'); const reader = new FileReader();
+
+            async importHomeCSV(e) {
+                const file = e.target.files[0]; if (!file || !this.isAdmin) return; 
+                const loader = document.getElementById('global-loader'); 
+                if(loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Importing Stats..."; }
+                
+                const reader = new FileReader();
                 reader.onload = async (event) => {
                     try {
-                        const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text); if(lines.length < 2) { if(loader) loader.classList.add('hidden'); return; }
+                        const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text); 
+                        if(lines.length < 2) throw new Error("CSV file is empty or invalid format.");
+                        
                         const titleText = String(lines[0][0] || '').trim().replace(/^"|"$/g, '');
                         if(titleText.includes('ဖွင့်လှစ်နိုင်မှုအခြေအနေ') || String(lines[1]).includes('လုပ်ငန်းဆောင်ရွက်နိုင်သော')) {
                             let fHosp = [], cHosp = []; let fTotal = 0, cTotal = 0;
@@ -1092,154 +1512,75 @@
                                 if(cName && !cName.includes('စုစုပေါင်း')) { cHosp.push({name: cName, val: cCount}); let v = parseInt(cCount); if(!isNaN(v)) cTotal += v; }
                             }
                             this.homeData.hospitals = { title: titleText || this.homeData.hospitals.title, func: fHosp, funcTotal: fTotal.toString(), closed: cHosp, closedTotal: cTotal.toString() };
-                            this.renderHomeStats(); this.logActivity('Data Import', 'Imported Hospital Status CSV'); await this.pushToCloud(); this.showToast('successUpdate');
+                            await this.pushToCloud();
+                            this.renderHomeStats(); 
+                            this.logActivity('Data Import', 'Imported Hospital Status CSV'); 
+                            this.showToast('successUpdate');
                         } else if(titleText.includes('ဆေးကုသရေးလုပ်ငန်းများ') || String(lines[1]).includes('အကြောင်းအရာ')) {
                             const headers = lines[1].map(c => String(c).trim().replace(/^"|"$/g, '')); let rows = [];
                             for(let i=2; i<lines.length; i++) { if(lines[i].join('').trim() === '') continue; let cols = lines[i].map(c => this.toEng(String(c).replace(/^"|"$/g, '').trim())); rows.push(cols); }
                             this.homeData.treatments = { title: titleText || this.homeData.treatments.title, headers: headers, rows: rows };
-                            this.renderHomeStats(); this.logActivity('Data Import', 'Imported Treatment Stats CSV'); await this.pushToCloud(); this.showToast('successUpdate');
-                        } else alert("Error format.");
-                    } catch(err) { alert("Error."); console.error(err); }
-                    if(loader) loader.classList.add('hidden'); e.target.value = null;
+                            await this.pushToCloud();
+                            this.renderHomeStats(); 
+                            this.logActivity('Data Import', 'Imported Treatment Stats CSV'); 
+                            this.showToast('successUpdate');
+                        } else {
+                            throw new Error("CSV structure does not match expected format.");
+                        }
+                    } catch(err) { 
+                        console.error("Home Import Error:", err);
+                        alert("Import Failed: " + (err.message || "Unknown error processing Home Data."));
+                    } finally {
+                        if(loader) loader.classList.add('hidden'); 
+                        e.target.value = null;
+                    }
                 };
                 reader.readAsText(file);
             },
-            importTMOCSV(e) {
-                const file = e.target.files[0]; if (!file || !this.isAdmin) return; const loader = document.getElementById('global-loader'); if(loader) loader.classList.remove('hidden'); const reader = new FileReader();
+
+            async importTMOCSV(e) {
+                const file = e.target.files[0]; if (!file || !this.isAdmin) return; 
+                const loader = document.getElementById('global-loader'); 
+                if(loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Importing TMO..."; }
+                
+                const reader = new FileReader();
                 reader.onload = async (event) => {
                     try {
                         const text = event.target.result.replace(/^\uFEFF/, ''), lines = this.parseCSV(text);
                         if (lines.length > 1) {
                             const headers = lines[0].map(h => String(h).trim()); let newTmoList = [];
-                            for(let i=1; i<lines.length; i++) { let cols = lines[i].map(c => this.toEng(String(c).trim())); if(cols.length < 2) continue; newTmoList.push({ id: Date.now().toString()+i, no: cols[0] || "", township: cols[1] || "", tsEmail: cols[2] || "", tmoName: cols[3] || "", tmoEmail: cols[4] || "", phone: cols[5] || "" }); }
-                            if (newTmoList.length > 0) { this.tmoList = newTmoList; this.renderTMOTable(); this.logActivity('Data Import', 'Imported new TMO Contact List'); await this.pushToCloud(); this.showToast('successImport'); }
-                        } else alert("Error format.");
-                    } catch(err) { alert("Error."); console.error(err); }
-                    if(loader) loader.classList.add('hidden'); e.target.value = null;
+                            for(let i=1; i<lines.length; i++) { 
+                                let cols = lines[i].map(c => this.toEng(String(c).trim())); 
+                                if(cols.length < 2) continue; 
+                                newTmoList.push({ 
+                                    id: this.generateUUID(), 
+                                    no: cols[0] || "", township: cols[1] || "", tsEmail: cols[2] || "", 
+                                    tmoName: cols[3] || "", tmoEmail: cols[4] || "", phone: cols[5] || "" 
+                                }); 
+                            }
+                            if (newTmoList.length > 0) { 
+                                this.tmoList = newTmoList; 
+                                await this.pushToCloud();
+                                this.renderTMOTable(); 
+                                this.logActivity('Data Import', 'Imported new TMO Contact List'); 
+                                this.showToast('successImport'); 
+                            } else {
+                                alert("No valid rows found in TMO CSV.");
+                            }
+                        } else {
+                            throw new Error("File appears empty.");
+                        }
+                    } catch(err) { 
+                        console.error("TMO Import Error:", err);
+                        alert("Import Failed: " + (err.message || "Unknown Error")); 
+                    } finally {
+                        if(loader) loader.classList.add('hidden'); 
+                        e.target.value = null;
+                    }
                 };
                 reader.readAsText(file);
             },
-            renderTMOTable() {
-                const tbody = document.getElementById('tmo-table-body'); if(!tbody) return; 
-                if (!this.isAdmin) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold">Log in required</td></tr>`;
-                    return;
-                }
 
-                const editStyle = 'contenteditable="true" style="background:#fef9c3; outline: 1px dashed #eab308; padding: 4px 8px; border-radius: 6px; min-width: 30px; display: inline-block;"';
-                let filteredList = this.tmoList.map((tmo, idx) => ({ ...tmo, _origIdx: idx }));
-                if(this.tmoSearchTerm) { filteredList = filteredList.filter(t => (t.township && t.township.toLowerCase().includes(this.tmoSearchTerm)) || (t.tmoName && t.tmoName.toLowerCase().includes(this.tmoSearchTerm)) || (t.tmoEmail && t.tmoEmail.toLowerCase().includes(this.tmoSearchTerm))); }
-                if (filteredList.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-bold">ရှာဖွေမှုမတွေ့ရှိပါ</td></tr>`; return; }
-                tbody.innerHTML = filteredList.map(tmo => {
-                    const i = tmo._origIdx;
-                    return `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-none">
-                        <td class="py-4 px-4 text-center font-bold text-slate-500 tmo-edit-cell" data-idx="${i}" data-field="no" ${this.isEditingTMO ? editStyle : ''}>${this.toMM(tmo.no)}</td>
-                        <td class="py-4 px-4 font-bold text-slate-800 tmo-edit-cell" data-idx="${i}" data-field="township" ${this.isEditingTMO ? editStyle : ''}>${tmo.township}</td>
-                        <td class="py-4 px-4 text-blue-600 tmo-edit-cell" data-idx="${i}" data-field="tsEmail" ${this.isEditingTMO ? editStyle : ''}>${tmo.tsEmail}</td>
-                        <td class="py-4 px-4 font-bold text-slate-700 tmo-edit-cell" data-idx="${i}" data-field="tmoName" ${this.isEditingTMO ? editStyle : ''}>${tmo.tmoName}</td>
-                        <td class="py-4 px-4 text-slate-600 tmo-edit-cell" data-idx="${i}" data-field="tmoEmail" ${this.isEditingTMO ? editStyle : ''}>${tmo.tmoEmail}</td>
-                        <td class="py-4 px-4 text-slate-700 font-medium tmo-edit-cell" data-idx="${i}" data-field="phone" ${this.isEditingTMO ? editStyle : ''}>${this.toMM(tmo.phone)}</td>
-                    </tr>`;
-                }).join('');
-            },
-            renderTable() {
-                const tbody = document.getElementById('employee-table-body'); if(!tbody) return;
-                
-                if (!this.isAdmin) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400 font-bold">Log in required</td></tr>`;
-                    return;
-                }
-
-                let filtered = this.employees.filter(emp => { const searchMatch = (emp.full_name||'').toLowerCase().includes(this.filters.search) || (emp.department||'').toLowerCase().includes(this.filters.search) || (emp.emp_id||'').toLowerCase().includes(this.filters.search); const distMatch = this.filters.dist ? emp.district === this.filters.dist : true, townMatch = this.filters.town ? emp.township === this.filters.town : true, hospMatch = this.filters.hosp ? emp.hospital === this.filters.hosp : true; return searchMatch && distMatch && townMatch && hospMatch; });
-                if (filtered.length === 0) { tbody.innerHTML = `<tr><td colSpan="7" class="px-6 py-24 text-center"><div class="flex flex-col items-center gap-4 text-slate-400"><i class="fa-solid fa-filter text-5xl opacity-20"></i><p class="font-bold text-lg">${t[this.lang].noData}</p></div></td></tr>`; return; }
-                tbody.innerHTML = filtered.map(emp => {
-                    const empStr = encodeURIComponent(JSON.stringify(emp)); let photoHtml = emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover shadow-sm border border-slate-200 shrink-0" />` : `<div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold text-sm shadow-inner shrink-0">${(emp.full_name||'A').charAt(0)}</div>`;
-                    return `<tr class="hover:bg-blue-50/40 transition-colors cursor-pointer group border-b border-slate-50 last:border-0" onclick="appState.openModal(JSON.parse(decodeURIComponent('${empStr}')))">
-                        <td class="px-4 py-4 text-center admin-only hidden" onclick="event.stopPropagation()"><input type="checkbox" value="${emp.id}" class="emp-checkbox w-4 h-4 rounded border-slate-300 cursor-pointer"></td>
-                        <td class="px-4 py-4 text-xs md:text-sm text-slate-500 font-medium">${this.toMM(emp.emp_id)}</td>
-                        <td class="px-4 py-4"><div class="flex items-center gap-2 md:gap-3">${photoHtml}<span class="text-sm md:text-base font-bold text-slate-800 group-hover:text-blue-700 transition-colors">${emp.full_name}</span></div></td>
-                        <td class="px-4 py-4"><p class="text-sm md:text-base text-slate-700 font-bold">${emp.township || '-'}</p><p class="text-[10px] md:text-xs text-slate-400 font-medium">${emp.district || '-'}</p></td>
-                        <td class="px-4 py-4"><p class="text-sm md:text-base text-slate-700 font-bold">${emp.hospital || '-'}</p><p class="text-[10px] md:text-xs text-blue-500 font-medium">${emp.beds ? `(${this.toMM(emp.beds)} ခုတင်)` : '-'}</p></td>
-                        <td class="px-4 py-4"><p class="text-sm md:text-base text-slate-700 font-bold truncate max-w-[150px] md:max-w-[200px]">${emp.department}</p><p class="text-[10px] md:text-xs text-slate-400 font-medium truncate max-w-[150px] md:max-w-[200px]">${emp.designation}</p></td>
-                        <td class="px-4 py-4 text-center"><div class="inline-flex items-center justify-center p-2 text-blue-600 bg-blue-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"><i class="fa-solid fa-eye"></i></div></td>
-                    </tr>`;
-                }).join('');
-            },
-            renderHospitalsList() {
-                const container = document.getElementById('hospitals-list-container'); 
-                if(!container) return; 
-
-                // 1. Data Logic: Calculate Totals by Bed Capacity
-                const capacityCategories = ["500", "200", "100", "50", "25", "16"];
-                const summaryData = capacityCategories.reduce((acc, cap) => ({ ...acc, [cap]: 0 }), {});
-                let grandTotal = 0;
-
-                for (const dist in locationData) {
-                    for (const town in locationData[dist]) {
-                        locationData[dist][town].forEach(hosp => {
-                            if (summaryData.hasOwnProperty(hosp.beds)) {
-                                summaryData[hosp.beds]++;
-                                grandTotal++;
-                            }
-                        });
-                    }
-                }
-
-                // 2. UI Implementation: Summary Table HTML
-                let summaryTableHtml = `
-                    <div class="col-span-full mb-10 animate-in">
-                        <h4 class="text-lg md:text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-table-list text-blue-600"></i>
-                            ${t[this.lang].summaryTitle}
-                        </h4>
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
-                                        <tr>
-                                            <th class="px-6 py-4 text-sm font-bold text-slate-600">${t[this.lang].bedCapacity}</th>
-                                            <th class="px-6 py-4 text-sm font-bold text-slate-600 text-right">${t[this.lang].totalCount}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        ${capacityCategories.map(cap => `
-                                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                                <td class="px-6 py-4 text-sm font-medium text-slate-700">
-                                                    ${this.toMM(cap)} ${t[this.lang].bedsSuffix}
-                                                </td>
-                                                <td class="px-6 py-4 text-sm font-black text-blue-600 text-right">
-                                                    ${this.toMM(summaryData[cap])}
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                    <tfoot class="bg-blue-50/30 border-t-2 border-slate-200">
-                                        <tr>
-                                            <td class="px-6 py-4 text-sm font-bold text-slate-800 text-right">Total</td>
-                                            <td class="px-6 py-4 text-base font-black text-blue-800 text-right">
-                                                ${this.toMM(grandTotal)}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                // 3. Original Location-based Grids
-                let detailedHtml = '';
-                for (const dist in locationData) {
-                    let townHtml = ''; let totalHospInDist = 0;
-                    for (const town in locationData[dist]) {
-                        const hosps = locationData[dist][town]; totalHospInDist += hosps.length;
-                        let hospItems = hosps.map(h => `<li class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"><span class="text-xs md:text-sm font-bold text-slate-700"><i class="fa-solid fa-caret-right text-indigo-300 mr-2"></i> ${h.name}</span> <span class="text-[10px] md:text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full whitespace-nowrap ml-2">${h.beds === '-' ? 'N/A' : this.toMM(h.beds) + ' ခုတင်'}</span></li>`).join('');
-                        townHtml += `<div class="mb-4"><h5 class="font-bold text-indigo-700 text-xs md:text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${town}</h5><ul class="bg-white rounded-xl border border-slate-100 p-2 shadow-sm">${hospItems}</ul></div>`;
-                    }
-                    detailedHtml += `<div class="bg-slate-50 rounded-[1.5rem] p-4 md:p-6 border border-slate-200 shadow-sm"><div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-200"><h4 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-500"></i> ${dist}</h4><span class="bg-blue-100 text-blue-700 text-[10px] md:text-xs font-bold px-3 py-1 rounded-full">${this.toMM(totalHospInDist)} ရုံ</span></div>${townHtml}</div>`;
-                }
-                container.innerHTML = summaryTableHtml + detailedHtml;
-            },
             renderHomeStats() {
                 const statDist = document.getElementById('stat-districts'), statTown = document.getElementById('stat-townships');
                 if(statDist) statDist.innerText = this.toMM(Object.keys(locationData).length);

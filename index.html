@@ -91,6 +91,7 @@
                 <button onclick="appState.setView('home')" id="nav-home" title="Home" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left bg-blue-600 text-white shadow-lg shadow-blue-600/30"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-house"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="home">Home</span></button>
                 <button onclick="appState.setView('orgchart')" id="nav-orgchart" title="ဖွဲ့စည်းပုံ" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-sitemap"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="orgChartTitle">ဖွဲ့စည်းပုံ</span></button>
                 <button onclick="appState.setView('hospitals')" id="nav-hospitals" title="ဆေးရုံများ" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-hospital"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="hospitalList">ဆေးရုံများ</span></button>
+                <button onclick="appState.setView('documents')" id="nav-documents" title="စာရွက်စာတမ်းများ" class="flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-file-pdf"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="documentsTitle">စာရွက်စာတမ်းများ</span></button>
                 
                 <!-- Admin Only Menus -->
                 <button onclick="appState.setView('tmo')" id="nav-tmo" title="TMO Contacts" class="admin-only hidden flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400"><div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-address-book"></i></div><span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-i18n="tmoTitle">TMO Contacts</span></button>
@@ -116,6 +117,7 @@
                             <button onclick="appState.setView('home'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-house w-6 text-center text-slate-400"></i> <span data-i18n="home">Home</span></button>
                             <button onclick="appState.setView('orgchart'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-sitemap w-6 text-center text-slate-400"></i> <span data-i18n="orgChartTitle">ဖွဲ့စည်းပုံ</span></button>
                             <button onclick="appState.setView('hospitals'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-hospital w-6 text-center text-slate-400"></i> <span data-i18n="hospitalList">ဆေးရုံများ</span></button>
+                            <button onclick="appState.setView('documents'); appState.toggleMenu()" class="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-file-pdf w-6 text-center text-slate-400"></i> <span data-i18n="documentsTitle">စာရွက်စာတမ်းများ</span></button>
                             <button onclick="appState.setView('tmo'); appState.toggleMenu()" class="admin-only hidden flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-address-book w-6 text-center text-slate-400"></i> <span data-i18n="tmoTitle">TMO Contacts</span></button>
                             <button onclick="appState.setView('dashboard'); appState.toggleMenu()" class="admin-only hidden flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-blue-50 hover:text-blue-700 transition-colors font-bold text-[15px] text-slate-700"><i class="fa-solid fa-users w-6 text-center text-slate-400"></i> <span data-i18n="employeeList">ဝန်ထမ်းအင်အားစာရင်း</span></button>
                             <div class="h-px bg-slate-100 my-2 mx-4"></div>
@@ -210,6 +212,27 @@
                     </div>
                 </div>
 
+                <!-- Documents View -->
+                <div id="view-documents" class="hidden animate-in pb-10">
+                    <div class="bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200">
+                        <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-6">
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3">
+                                <span class="bg-red-100 text-red-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-file-pdf"></i></span>
+                                <span data-i18n="documentsTitle">စာရွက်စာတမ်းများ</span>
+                            </h3>
+                            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto ml-0 lg:ml-auto">
+                                <input type="file" id="upload-doc-input" accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden" onchange="appState.uploadDocument(event)" />
+                                <button onclick="document.getElementById('upload-doc-input').click()" class="admin-only hidden w-full sm:w-auto justify-center flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="uploadFile">ဖိုင်တင်မည်</span>
+                                </button>
+                            </div>
+                        </header>
+                        <div id="documents-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                            <!-- Documents will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- TMO View (Admin Only) -->
                 <div id="view-tmo" class="hidden animate-in pb-10">
                     <div class="bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200">
@@ -239,7 +262,6 @@
                     <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner shrink-0"><i class="fa-solid fa-users"></i></span><span data-i18n="employeeList">ဝန်ထမ်းအင်အားစာရင်း</span></h3>
                         <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto ml-0 lg:ml-auto">
-                            <!-- BULK DELETE BUTTON -->
                             <button onclick="appState.deleteSelectedEmployees()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-red-50 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl font-bold hover:bg-red-100 transition-all shadow-sm text-sm admin-only hidden"><i class="fa-solid fa-trash"></i> <span data-i18n="deleteSelected">ရွေးချယ်ထားသည်များကိုဖျက်မည်</span></button>
                             <button onclick="document.getElementById('importFile').click()" class="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-all shadow-sm text-sm admin-only hidden"><i class="fa-solid fa-upload"></i> <span class="inline">Import</span></button>
                             <input type="file" id="importFile" accept=".csv" class="hidden" onchange="appState.importCSV(event)" />
@@ -500,7 +522,8 @@
                 successExport:"ဒေါင်းလုဒ်ဆွဲပြီးပါပြီ",successImport:"ထည့်သွင်းပြီးပါပြီ",employeeList:"ဝန်ထမ်းအင်အားစာရင်း",hospitalList:"ဆေးရုံများ",
                 settings:"ဆက်တင်များ",languageSetting:"ဘာသာစကားပြောင်းရန်",appVersion:"App ဗားရှင်း",tmoTitle:"TMO Contacts",
                 bedCapacity: "ခုတင်အဆင့်", totalCount: "စုစုပေါင်းအရေအတွက်", summaryTitle: "ဆေးရုံများအနှစ်ချုပ်ဇယား", bedsSuffix: "ခုတင်ဆံ့ဆေးရုံ",
-                deleteSelected: "ရွေးချယ်ထားသည်များကိုဖျက်မည်"
+                deleteSelected: "ရွေးချယ်ထားသည်များကိုဖျက်မည်",
+                documentsTitle: "စာရွက်စာတမ်းများ", uploadFile: "ဖိုင်တင်မည်", download: "ဒေါင်းလုဒ်", noDocuments: "စာရွက်စာတမ်းများ မရှိသေးပါ"
             },
             en:{
                 title:"MedDash",subtitle:"Shan State (South) Public Health Department",total:"Total Employees",searchPlaceholder:"Search...",addBtn:"Add Employee",
@@ -515,7 +538,8 @@
                 successExport:"Exported successfully",successImport:"Imported successfully",employeeList:"Employee List",hospitalList:"Hospitals",
                 settings:"Settings",languageSetting:"Change Language",appVersion:"App Version",tmoTitle:"TMO Contacts",
                 bedCapacity: "Bed Capacity", totalCount: "Total Count", summaryTitle: "Hospital Summary Table", bedsSuffix: "-Bed Hospital",
-                deleteSelected: "Delete Selected"
+                deleteSelected: "Delete Selected",
+                documentsTitle: "Documents", uploadFile: "Upload File", download: "Download", noDocuments: "No documents available"
             }
         };
 
@@ -525,6 +549,7 @@
             employees: [],
             homeData: defaultHomeData, 
             tmoList: [],
+            documentsList: [],
             activityLogs: [], menuOpen: false, previewImage: null, editingEmp: null, filters: { dist: '', town: '', hosp: '', search: '' }, isEditingHosp: false, isEditingTreat: false, isEditingTMO: false, hospChart: null, tmoSearchTerm: '', mapZoomLevel: 1, isDraggingMap: false, mapStartX: 0, mapStartY: 0, mapScrollLeft: 0, mapScrollTop: 0,
             
             toMM(str) { if(str===null||str===undefined)return''; return String(str).replace(/[0-9]/g, c=>engToMm[c]||c); },
@@ -619,7 +644,75 @@
                 } catch(error) { console.error(error); } 
             },
 
+            async fetchDocuments() {
+                try {
+                    const { data, error } = await supabase.storage.from('meddash-files').list();
+                    if (error) throw error;
+                    // Exclude any empty folder placeholders created by storage interfaces
+                    this.documentsList = data.filter(file => file.name !== '.emptyFolderPlaceholder' && file.id);
+                } catch (e) {
+                    console.error("Fetch docs error", e);
+                }
+            },
+
+            getDownloadUrl(fileName) {
+                const { data } = supabase.storage.from('meddash-files').getPublicUrl(fileName);
+                return data.publicUrl;
+            },
+
+            async uploadDocument(e) {
+                if (!this.isAdmin) return;
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const loader = document.getElementById('global-loader');
+                if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Uploading..."; }
+
+                try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`; // Clean name
+                    
+                    const { error } = await supabase.storage.from('meddash-files').upload(fileName, file, { upsert: false });
+                    if (error) throw error;
+                    
+                    await this.fetchDocuments(); 
+                    this.renderDocumentsList();
+                    this.logActivity('Document Upload', `Uploaded ${file.name}`);
+                    this.showToast('successUpdate');
+                } catch (err) {
+                    console.error("Upload error", err);
+                    alert("Upload failed.");
+                } finally {
+                    if (loader) loader.classList.add('hidden');
+                    e.target.value = null; // reset input
+                }
+            },
+
+            async deleteDocument(fileName) {
+                if (!this.isAdmin) return;
+                if (confirm("ဖျက်ရန် သေချာပါသလား?")) {
+                    const loader = document.getElementById('global-loader');
+                    if (loader) { loader.classList.remove('hidden'); document.getElementById('loader-text').innerText = "Deleting..."; }
+                    
+                    try {
+                        const { error } = await supabase.storage.from('meddash-files').remove([fileName]);
+                        if (error) throw error;
+                        
+                        this.documentsList = this.documentsList.filter(f => f.name !== fileName);
+                        this.renderDocumentsList();
+                        this.logActivity('Document Delete', `Deleted ${fileName}`);
+                        this.showToast('successDelete');
+                    } catch (err) {
+                        console.error("Delete error", err);
+                        alert("Delete failed.");
+                    } finally {
+                        if (loader) loader.classList.add('hidden');
+                    }
+                }
+            },
+
             async fetchCloudData() {
+                // Fetch public home state first
                 try {
                     const { data: homeState, error: homeErr } = await supabase.from('meddash_state').select('*').eq('id', 'main_doc').maybeSingle();
                     if (homeState && !homeErr) {
@@ -630,13 +723,18 @@
                     console.error("Home state fetch error", e);
                 }
 
+                // Documents should be fetchable by viewers as well
+                await this.fetchDocuments();
+
                 if (!this.isAdmin) {
+                    // SECURITY FIX: Explicitly purge memory arrays when not logged in
                     this.employees = [];
                     this.tmoList = [];
                     this.refreshUI();
                     return;
                 }
                 
+                // Fetch Sensitive Tables
                 try {
                     const { data: empData, error: empErr } = await supabase.from('employees').select('*');
                     if (empData && !empErr) this.employees = empData; else this.employees = [];
@@ -731,14 +829,15 @@
                 this.renderHomeStats(); 
                 this.renderHospitalsList(); 
                 this.renderTMOTable(); 
+                this.renderDocumentsList();
                 this.updateAdminUI(); 
             },
 
             setView(v) {
                 if(!this.isAdmin && (v === 'tmo' || v === 'dashboard')) { v = 'home'; }
                 this.view = v;
-                ['home','orgchart','hospitals','tmo','dashboard','settings'].forEach(id => { const el = document.getElementById('view-' + id), navEl = document.getElementById('nav-' + id); if(el) el.classList.toggle('hidden', v !== id); if(navEl && !navEl.classList.contains('hidden')) navEl.className = v === id ? 'flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400'; });
-                if(v === 'tmo') this.renderTMOTable(); if(v === 'home') this.renderHomeStats(); if(v === 'settings') this.renderLogs();
+                ['home','orgchart','hospitals','documents','tmo','dashboard','settings'].forEach(id => { const el = document.getElementById('view-' + id), navEl = document.getElementById('nav-' + id); if(el) el.classList.toggle('hidden', v !== id); if(navEl && !navEl.classList.contains('hidden')) navEl.className = v === id ? 'flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'flex items-center gap-4 w-full p-3.5 rounded-xl transition-all font-bold text-lg text-left hover:bg-slate-800 text-slate-400'; });
+                if(v === 'tmo') this.renderTMOTable(); if(v === 'home') this.renderHomeStats(); if(v === 'settings') this.renderLogs(); if (v === 'documents') this.renderDocumentsList();
             },
             toggleMenu() { this.menuOpen = !this.menuOpen; const menu = document.getElementById('dropdown-menu'); if (menu) menu.classList.toggle('hidden', !this.menuOpen); },
             toggleLanguage() { this.lang = this.lang === 'mm' ? 'en' : 'mm'; const langIndicator = document.getElementById('settings-lang-indicator'); if (langIndicator) langIndicator.innerText = this.lang.toUpperCase(); this.updateUITexts(); this.refreshUI(); },
@@ -876,6 +975,59 @@
                         console.error("Bulk delete failed", err);
                         alert("ဖျက်ရာတွင် အခက်အခဲရှိပါသည်။");
                     }
+                }
+            },
+
+            renderDocumentsList() {
+                const container = document.getElementById('documents-list-container');
+                if (!container) return;
+
+                if (this.documentsList.length === 0) {
+                    container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold"><i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i><p data-i18n="noDocuments">${t[this.lang].noDocuments}</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = this.documentsList.map(doc => {
+                    const url = this.getDownloadUrl(doc.name);
+                    const isPdf = doc.name.toLowerCase().endsWith('.pdf');
+                    const isExcel = doc.name.toLowerCase().includes('.xls');
+                    const isWord = doc.name.toLowerCase().includes('.doc');
+                    
+                    let iconClass = "fa-file";
+                    let iconColor = "text-slate-500 bg-slate-100";
+                    if (isPdf) { iconClass = "fa-file-pdf"; iconColor = "text-red-600 bg-red-50"; }
+                    else if (isExcel) { iconClass = "fa-file-excel"; iconColor = "text-emerald-600 bg-emerald-50"; }
+                    else if (isWord) { iconClass = "fa-file-word"; iconColor = "text-blue-600 bg-blue-50"; }
+                    
+                    const fileSize = doc.metadata?.size ? (doc.metadata.size / 1024 / 1024).toFixed(2) + " MB" : "Unknown";
+                    const displayDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString() : "";
+
+                    return `
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow group">
+                            <div class="flex items-start gap-3 mb-4">
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconColor}">
+                                    <i class="fa-solid ${iconClass} text-2xl"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="font-bold text-slate-800 text-sm truncate" title="${doc.name}">${doc.name}</h5>
+                                    <p class="text-[10px] md:text-xs text-slate-400 mt-1 font-medium">${fileSize} • ${displayDate}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 border-t border-slate-100 pt-3 mt-auto">
+                                <a href="${url}" target="_blank" class="flex-1 text-center bg-slate-50 hover:bg-blue-50 text-blue-600 font-bold py-2 rounded-xl transition-colors text-xs flex justify-center items-center gap-2">
+                                    <i class="fa-solid fa-download"></i> <span data-i18n="download">${t[this.lang].download}</span>
+                                </a>
+                                <button onclick="appState.deleteDocument('${doc.name}')" class="admin-only hidden w-10 h-10 flex items-center justify-center bg-white border border-slate-200 hover:border-red-200 hover:bg-red-50 text-red-500 rounded-xl transition-colors shrink-0" title="Delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Re-apply admin visibility logic specifically for the dynamically generated buttons
+                if(this.isAdmin) {
+                    document.querySelectorAll('#documents-list-container .admin-only').forEach(el => el.classList.remove('hidden'));
                 }
             },
 
